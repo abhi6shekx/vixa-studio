@@ -10,6 +10,7 @@ from flask import Flask, jsonify, request, send_from_directory
 from werkzeug.utils import secure_filename
 
 from editor import process_video
+from media_tools import ffmpeg_executable, has_ffmpeg
 
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -32,11 +33,7 @@ def save_uploaded_file(file):
 
 
 def _has_ffmpeg():
-    try:
-        subprocess.run(["ffmpeg", "-version"], capture_output=True, text=True, check=False)
-    except FileNotFoundError:
-        return False
-    return True
+    return has_ffmpeg()
 
 
 def _target_size(aspect_ratio):
@@ -69,7 +66,8 @@ def _photo_motion_filter(width, height, motion, duration, fps):
 
 def render_photo_video(image_paths, prompt, motion, duration, aspect_ratio):
     os.makedirs(OUTPUT_DIR, exist_ok=True)
-    if not _has_ffmpeg():
+    ffmpeg = ffmpeg_executable()
+    if not ffmpeg:
         return {
             "status": "error",
             "message": "FFmpeg is required for real Photo to Video rendering.",
@@ -87,7 +85,7 @@ def render_photo_video(image_paths, prompt, motion, duration, aspect_ratio):
             clip_name = f"photo_clip_{uuid.uuid4().hex[:10]}.mp4"
             clip_path = os.path.join(OUTPUT_DIR, clip_name)
             command = [
-                "ffmpeg",
+                ffmpeg,
                 "-y",
                 "-loop",
                 "1",
@@ -129,7 +127,7 @@ def render_photo_video(image_paths, prompt, motion, duration, aspect_ratio):
                 for clip_path in temp_clips:
                     handle.write(f"file '{clip_path}'\n")
             result = subprocess.run(
-                ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", concat_path, "-c", "copy", output_path],
+                [ffmpeg, "-y", "-f", "concat", "-safe", "0", "-i", concat_path, "-c", "copy", output_path],
                 capture_output=True,
                 text=True,
             )

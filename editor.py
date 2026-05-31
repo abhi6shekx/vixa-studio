@@ -1,18 +1,14 @@
 import os
-import shutil
 import subprocess
 import uuid
 
+from media_tools import ffmpeg_executable
 from prompt_ai import parse_prompt
 
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 RUNTIME_DIR = "/tmp" if os.environ.get("VERCEL") else BASE_DIR
 OUTPUT_DIR = os.environ.get("VIXA_OUTPUT_DIR", os.path.join(RUNTIME_DIR, "outputs"))
-
-
-def _has_ffmpeg():
-    return shutil.which("ffmpeg") is not None
 
 
 def _build_filters(settings):
@@ -57,7 +53,8 @@ def process_video(video_path, prompt):
     settings = parse_prompt(prompt)
     plan = _plan_from_settings(settings, prompt)
 
-    if not _has_ffmpeg():
+    ffmpeg = ffmpeg_executable()
+    if not ffmpeg:
         return {
             "status": "plan-only",
             "message": "ffmpeg was not found, so Vixa Studio created the AI edit plan only.",
@@ -71,7 +68,7 @@ def process_video(video_path, prompt):
     filters = _build_filters(settings)
 
     command = [
-        "ffmpeg",
+        ffmpeg,
         "-y",
         "-i",
         video_path,
