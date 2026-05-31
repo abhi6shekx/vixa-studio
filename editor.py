@@ -6,7 +6,9 @@ import uuid
 from prompt_ai import parse_prompt
 
 
-OUTPUT_DIR = "outputs"
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+RUNTIME_DIR = "/tmp" if os.environ.get("VERCEL") else BASE_DIR
+OUTPUT_DIR = os.environ.get("VIXA_OUTPUT_DIR", os.path.join(RUNTIME_DIR, "outputs"))
 
 
 def _has_ffmpeg():

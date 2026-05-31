@@ -223,6 +223,20 @@ function buildPhotoCaption(prompt) {
   return `${label} • ${effect}`;
 }
 
+function showRenderedOutput(result, fallbackName = "Vixa AI render") {
+  if (!result?.output_url) return false;
+  video.src = result.output_url;
+  video.load();
+  projectName.textContent = fallbackName;
+  captionOverlay.textContent = "Rendered output ready";
+  captionOverlay.style.display = "block";
+  if (downloadLink) {
+    downloadLink.href = result.download_url || result.output_url;
+    downloadLink.hidden = false;
+  }
+  return true;
+}
+
 function resetNewProject() {
   selectedFile = null;
   editPlan = makePlan(36);
@@ -269,7 +283,7 @@ function resetNewProject() {
   window.scrollTo({ top: Math.max(0, editorTop - 16), behavior: "smooth" });
 }
 
-function generatePhotoVideo() {
+async function generatePhotoVideo() {
   const files = Array.from(photoInput.files || []);
   const prompt = photoPrompt.value.trim();
 
@@ -281,10 +295,23 @@ function generatePhotoVideo() {
   }
 
   setPhotoLoading(true);
-  statusText.textContent = "Generating cinematic motion from photos...";
-  photoPreviewMeta.textContent = "Building AI motion preview...";
+  statusText.textContent = "Uploading photos to AI renderer...";
+  photoPreviewMeta.textContent = "Rendering real MP4 video...";
 
-  setTimeout(() => {
+  try {
+    const formData = new FormData();
+    files.forEach((file) => formData.append("images", file));
+    formData.append("prompt", prompt);
+    formData.append("motion", selectedPhotoMotion);
+    formData.append("duration", selectedPhotoDuration);
+    formData.append("aspect_ratio", selectedPhotoRatio);
+
+    const response = await fetch("/photo-to-video", { method: "POST", body: formData });
+    const result = await response.json();
+    if (!response.ok || result.status === "render-error" || result.status === "error") {
+      throw new Error(result.message || "Photo to Video render failed");
+    }
+
     clearPhotoTimer();
     resetPhotoObjectUrls();
     photoUrls = files.map((file) => URL.createObjectURL(file));
@@ -313,9 +340,15 @@ function generatePhotoVideo() {
       }, switchDelay);
     }
 
+    showRenderedOutput(result, "Photo to Video render");
+    photoPreviewMeta.textContent = `${files.length} image${files.length === 1 ? "" : "s"} • real MP4 rendered • ${selectedPhotoDuration} sec • ${selectedPhotoRatio}`;
+    statusText.textContent = result.message || "Photo to Video AI rendered successfully";
+  } catch (error) {
+    statusText.textContent = error.message || "Photo to Video render failed";
+    photoPreviewMeta.textContent = "Render failed. Check FFmpeg and try again.";
+  } finally {
     setPhotoLoading(false);
-    statusText.textContent = "Photo to Video AI preview generated";
-  }, 900);
+  }
 }
 
 function updateReferenceAnalysis(analysis) {
@@ -361,13 +394,7 @@ async function generateReferenceEdit() {
     statusText.textContent = "Reference Match AI generated a style plan";
 
     if (result.output_url) {
-      video.src = result.output_url;
-      video.load();
-      projectName.textContent = "Reference matched edit";
-      if (downloadLink) {
-        downloadLink.href = result.download_url || result.output_url;
-        downloadLink.hidden = false;
-      }
+      showRenderedOutput(result, "Reference matched edit");
     } else {
       video.src = URL.createObjectURL(mainFile);
       projectName.textContent = mainFile.name;
@@ -412,12 +439,7 @@ async function generatePlan() {
       const result = await response.json();
       applyServerPlan(result.plan);
       if (result.output_url) {
-        video.src = result.output_url;
-        video.load();
-        if (downloadLink) {
-          downloadLink.href = result.download_url || result.output_url;
-          downloadLink.hidden = false;
-        }
+        showRenderedOutput(result, selectedFile.name);
       }
       statusText.textContent = result.message || "AI edit generated";
     } catch (error) {
@@ -601,4 +623,4 @@ referenceVideoInput.addEventListener("change", () => {
 
 referenceGenerateBtn.addEventListener("click", generateReferenceEdit);
 
-generatePlan();
+resetNewProject();

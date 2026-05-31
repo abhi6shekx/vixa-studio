@@ -31,6 +31,141 @@ def save_uploaded_file(file):
     return upload_path
 
 
+def _has_ffmpeg():
+    try:
+        subprocess.run(["ffmpeg", "-version"], capture_output=True, text=True, check=False)
+    except FileNotFoundError:
+        return False
+    return True
+
+
+def _target_size(aspect_ratio):
+    if aspect_ratio == "9:16":
+        return 1080, 1920
+    if aspect_ratio == "1:1":
+        return 1080, 1080
+    return 1280, 720
+
+
+def _photo_motion_filter(width, height, motion, duration, fps):
+    total_frames = max(1, int(duration * fps))
+    base = f"scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height}"
+    if motion == "pan-left":
+        motion_filter = f"zoompan=z='1.12':x='iw*0.08-(iw*0.16*on/{total_frames})':y='ih*0.03':d={total_frames}:s={width}x{height}:fps={fps}"
+    elif motion == "pan-right":
+        motion_filter = f"zoompan=z='1.12':x='iw*0.02+(iw*0.16*on/{total_frames})':y='ih*0.03':d={total_frames}:s={width}x{height}:fps={fps}"
+    elif motion == "parallax":
+        motion_filter = f"zoompan=z='1+0.16*sin(on/18)':x='iw*0.04*sin(on/20)':y='ih*0.04*cos(on/24)':d={total_frames}:s={width}x{height}:fps={fps}"
+    elif motion == "anime":
+        motion_filter = f"zoompan=z='1+0.08*floor(on/8)':x='iw*0.02*sin(on/8)':y='ih*0.02*cos(on/8)':d={total_frames}:s={width}x{height}:fps={fps},eq=saturation=1.45:contrast=1.18"
+    elif motion == "product":
+        motion_filter = f"zoompan=z='1.04+0.10*on/{total_frames}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={total_frames}:s={width}x{height}:fps={fps},eq=contrast=1.08:saturation=1.12"
+    elif motion == "cinematic":
+        motion_filter = f"zoompan=z='1.05+0.18*on/{total_frames}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={total_frames}:s={width}x{height}:fps={fps},eq=contrast=1.22:saturation=1.18:brightness=-0.025"
+    else:
+        motion_filter = f"zoompan=z='1.03+0.14*on/{total_frames}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={total_frames}:s={width}x{height}:fps={fps}"
+    return f"{base},{motion_filter},format=yuv420p"
+
+
+def render_photo_video(image_paths, prompt, motion, duration, aspect_ratio):
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    if not _has_ffmpeg():
+        return {
+            "status": "error",
+            "message": "FFmpeg is required for real Photo to Video rendering.",
+            "output_url": None,
+        }
+
+    safe_duration = min(max(int(duration or 5), 5), 30)
+    fps = 30
+    width, height = _target_size(aspect_ratio)
+    per_image_duration = max(1.0, safe_duration / max(1, len(image_paths)))
+    temp_clips = []
+
+    try:
+        for image_path in image_paths:
+            clip_name = f"photo_clip_{uuid.uuid4().hex[:10]}.mp4"
+            clip_path = os.path.join(OUTPUT_DIR, clip_name)
+            command = [
+                "ffmpeg",
+                "-y",
+                "-loop",
+                "1",
+                "-t",
+                str(per_image_duration),
+                "-i",
+                image_path,
+                "-vf",
+                _photo_motion_filter(width, height, motion, per_image_duration, fps),
+                "-an",
+                "-c:v",
+                "libx264",
+                "-preset",
+                "veryfast",
+                "-crf",
+                "22",
+                "-pix_fmt",
+                "yuv420p",
+                clip_path,
+            ]
+            result = subprocess.run(command, capture_output=True, text=True)
+            if result.returncode != 0:
+                return {
+                    "status": "render-error",
+                    "message": result.stderr[-1200:] or "Photo motion render failed.",
+                    "output_url": None,
+                }
+            temp_clips.append(clip_path)
+
+        output_name = f"photo_video_{uuid.uuid4().hex[:10]}.mp4"
+        output_path = os.path.join(OUTPUT_DIR, output_name)
+
+        if len(temp_clips) == 1:
+            os.replace(temp_clips[0], output_path)
+            temp_clips = []
+        else:
+            concat_path = os.path.join(OUTPUT_DIR, f"concat_{uuid.uuid4().hex[:10]}.txt")
+            with open(concat_path, "w", encoding="utf-8") as handle:
+                for clip_path in temp_clips:
+                    handle.write(f"file '{clip_path}'\n")
+            result = subprocess.run(
+                ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", concat_path, "-c", "copy", output_path],
+                capture_output=True,
+                text=True,
+            )
+            try:
+                os.remove(concat_path)
+            except OSError:
+                pass
+            if result.returncode != 0:
+                return {
+                    "status": "render-error",
+                    "message": result.stderr[-1200:] or "Photo video combine failed.",
+                    "output_url": None,
+                }
+
+        return {
+            "status": "rendered",
+            "success": True,
+            "message": "Photo to Video AI rendered successfully.",
+            "output_url": f"/outputs/{output_name}",
+            "download_url": f"/download/{output_name}",
+            "meta": {
+                "images": len(image_paths),
+                "duration": safe_duration,
+                "aspect_ratio": aspect_ratio,
+                "motion": motion,
+                "prompt": prompt,
+            },
+        }
+    finally:
+        for clip_path in temp_clips:
+            try:
+                os.remove(clip_path)
+            except OSError:
+                pass
+
+
 def _aspect_label(width, height):
     if not width or not height:
         return "Unknown"
@@ -160,7 +295,12 @@ def edit():
 
     upload_path = save_uploaded_file(file)
 
-    return jsonify(process_video(upload_path, prompt))
+    data = process_video(upload_path, prompt)
+    if data.get("output_url"):
+        filename = os.path.basename(data["output_url"])
+        data["success"] = True
+        data["download_url"] = f"/download/{filename}"
+    return jsonify(data)
 
 
 @app.post("/api/edit")
@@ -214,6 +354,42 @@ def reference_edit():
 @app.post("/api/reference-edit")
 def api_reference_edit():
     return reference_edit()
+
+
+@app.post("/photo-to-video")
+def photo_to_video():
+    images = request.files.getlist("images")
+    if not images:
+        return jsonify({"status": "error", "message": "Upload one or more images."}), 400
+
+    saved_images = []
+    for image in images[:12]:
+        if image.filename:
+            saved_images.append(save_uploaded_file(image))
+
+    if not saved_images:
+        return jsonify({"status": "error", "message": "No valid image files uploaded."}), 400
+
+    prompt = request.form.get("prompt", "")
+    motion = request.form.get("motion", "slow-zoom")
+    duration = request.form.get("duration", 5)
+    aspect_ratio = request.form.get("aspect_ratio", "16:9")
+    return jsonify(render_photo_video(saved_images, prompt, motion, duration, aspect_ratio))
+
+
+@app.post("/api/photo-to-video")
+def api_photo_to_video():
+    return photo_to_video()
+
+
+@app.get("/health")
+def health():
+    return jsonify({
+        "status": "ok",
+        "ffmpeg": _has_ffmpeg(),
+        "opencv": cv2 is not None,
+        "runtime": "vercel" if os.environ.get("VERCEL") else "local",
+    })
 
 
 @app.get("/outputs/<path:filename>")
