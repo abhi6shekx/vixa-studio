@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vixa Studio</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-logo"></span>
+        <div>
+          <h1>Vixa Studio</h1>
+          <p>AI Video Studio</p>
+        </div>
+      </div>
+
+      <button id="newProjectBtn" class="new-project" type="button">+ New Project</button>
+
+      <nav class="nav-list" aria-label="Primary navigation">
+        <button class="nav-item active" type="button" data-scroll="top"><span>Dashboard</span></button>
+        <button class="nav-item" type="button" data-scroll="videoEditor"><span>AI Editor</span></button>
+        <button class="nav-item" type="button" data-scroll="referenceMatch"><span>Reference Match</span></button>
+        <button class="nav-item" type="button" data-scroll="photoToVideo"><span>Photo to Video</span></button>
+        <button class="nav-item" type="button"><span>Templates</span></button>
+        <button class="nav-item" type="button"><span>Projects</span></button>
+        <button class="nav-item" type="button"><span>AI Voice (TTS)</span></button>
+        <button class="nav-item" type="button"><span>Subtitles</span></button>
+        <button class="nav-item" type="button"><span>Music</span></button>
+        <button class="nav-item" type="button"><span>Analytics</span></button>
+        <button class="nav-item" type="button"><span>Settings</span></button>
+      </nav>
+
+      <section class="upgrade-card">
+        <strong>Upgrade to Pro</strong>
+        <p>Unlock all features, faster renders, unlimited exports and more.</p>
+        <button type="button">Upgrade Now</button>
+      </section>
+
+      <section class="storage-card">
+        <div><span>Storage</span><span>24.6 GB / 100 GB</span></div>
+        <div class="storage-bar"><span></span></div>
+        <small>24%</small>
+      </section>
+
+      <section class="profile-card">
+        <span class="avatar">A</span>
+        <div>
+          <strong>Anarn</strong>
+          <small>Pro Plan</small>
+        </div>
+      </section>
+    </aside>
+
+    <main id="top" class="main">
+      <header class="topbar">
+        <label class="search-box">
+          <span>⌕</span>
+          <input type="search" placeholder="Search projects, templates..." />
+          <kbd>⌘ K</kbd>
+        </label>
+        <div class="topbar-actions">
+          <div class="credits"><span>⚡</span><small>Credits</small><strong>12,450</strong></div>
+          <button class="icon-button" type="button">◔</button>
+          <button class="icon-button" type="button">?</button>
+          <button class="icon-button" type="button">☾</button>
+          <span class="user-avatar">A</span>
+        </div>
+      </header>
+
+      <div class="dashboard-layout">
+        <section class="dashboard-main">
+          <section class="hero">
+            <div class="hero-copy">
+              <span>Create. Edit. Inspire.</span>
+              <h2>AI Video Studio</h2>
+              <p>Turn your ideas into cinematic videos with the power of AI.</p>
+              <div class="hero-tags">
+                <b>AI Powered</b>
+                <b>Smart Editing</b>
+                <b>Lightning Fast</b>
+              </div>
+              <div class="hero-actions">
+                <button id="topGenerateBtn" class="primary" type="button">Start New Project</button>
+                <button class="secondary" type="button">AI Assistant</button>
+              </div>
+            </div>
+            <button class="play-button" type="button" aria-label="Preview Vixa Studio">▶</button>
+          </section>
+
+          <section class="steps-panel">
+            <div class="section-title">
+              <h3>Create with AI in 3 Simple Steps</h3>
+              <span>Hide</span>
+            </div>
+            <div class="steps-layout">
+              <article class="step-card">
+                <span class="step-icon">1</span>
+                <h4>Upload Media</h4>
+                <p>Upload your video or audio file to get started.</p>
+                <small>Supports MP4, MOV, AVI...</small>
+              </article>
+              <span class="step-arrow">→</span>
+              <article class="step-card">
+                <span class="step-icon">2</span>
+                <h4>Describe Your Edit</h4>
+                <p>Tell AI what you want. Be specific or creative.</p>
+                <small>Cinematic reel with subtitles and slow zoom.</small>
+              </article>
+              <span class="step-arrow">→</span>
+              <article class="step-card">
+                <span class="step-icon">3</span>
+                <h4>Generate Video</h4>
+                <p>AI will edit your video and make it stunning.</p>
+                <small>Ready in a few minutes.</small>
+              </article>
+              <aside class="prompt-examples">
+                <h4>Try Example Prompts</h4>
+                <button type="button" data-template="Cinematic travel reel with subtitles">Cinematic travel reel with subtitles</button>
+                <button type="button" data-template="Remove silence and make it dramatic">Remove silence and make it dramatic</button>
+                <button type="button" data-template="Motivational short with captions">Motivational short with captions</button>
+                <button type="button" data-template="Anime edit with beats and zoom">Anime edit with beats and zoom</button>
+              </aside>
+            </div>
+          </section>
+
+          <section class="content-row">
+            <article class="panel">
+              <div class="section-title">
+                <h3>Popular Templates</h3>
+                <button type="button" class="text-link">View all</button>
+              </div>
+              <div class="template-strip">
+                <button class="template-tile tile-cinematic" type="button" data-template="Make this a cinematic product teaser with premium captions."><span></span><strong>Cinematic</strong><small>16:9</small></button>
+                <button class="template-tile tile-dramatic" type="button" data-template="Make this dramatic with moody color and slow push-in."><span></span><strong>Dramatic</strong><small>16:9</small></button>
+                <button class="template-tile tile-reel" type="button" data-template="Create a viral short with fast pacing, bold captions, and a strong hook."><span></span><strong>Reel / Shorts</strong><small>9:16</small></button>
+                <button class="template-tile tile-anime" type="button" data-template="Turn this into an anime-inspired highlight reel with dramatic color and movement."><span></span><strong>Anime Edit</strong><small>16:9</small></button>
+              </div>
+            </article>
+
+            <article class="panel">
+              <div class="section-title">
+                <h3>Recent Projects</h3>
+                <button type="button" class="text-link">View all</button>
+              </div>
+              <div class="project-strip">
+                <article class="project-tile tile-dramatic"><span>00:45</span><strong>Cinematic Reel</strong><small>May 25, 2025 · 1080p</small></article>
+                <article class="project-tile tile-anime"><span>00:30</span><strong>Anime Edit</strong><small>May 24, 2025 · 1080p</small></article>
+                <article class="project-tile tile-cinematic"><span>01:20</span><strong>Travel Vlog</strong><small>May 23, 2025 · 4K</small></article>
+                <article class="project-tile tile-reel"><span>00:28</span><strong>Motivation Short</strong><small>May 22, 2025 · 1080p</small></article>
+              </div>
+            </article>
+          </section>
+
+          <section class="content-row overview-row">
+            <article class="panel overview-panel">
+              <h3>Your Studio Overview</h3>
+              <div class="overview-grid">
+                <div><span>📁</span><small>Total Projects</small><strong>28</strong><em>↗ 12% this month</em></div>
+                <div><span>▶</span><small>Videos Created</small><strong>47</strong><em>↗ 18% this month</em></div>
+                <div><span>◷</span><small>Hours Saved</small><strong>36.5</strong><em>↗ 24% this month</em></div>
+                <div><span>✦</span><small>AI Edits Used</small><strong>126</strong><em>↗ 32% this month</em></div>
+                <div><span>▰</span><small>Storage Used</small><strong>24.6 GB</strong><em>24% of 100 GB</em></div>
+              </div>
+            </article>
+            <article class="panel activity-panel">
+              <h3>Activity Feed</h3>
+              <p>Cinematic Reel completed <span>2 minutes ago</span></p>
+              <p>Anime Edit exported <span>15 minutes ago</span></p>
+              <p>Auto subtitles generated <span>32 minutes ago</span></p>
+              <p>Silence removed <span>1 hour ago</span></p>
+            </article>
+          </section>
+
+          <section id="referenceMatch" class="reference-editor panel">
+            <div class="section-title stacked">
+              <span>Copy Style from Reference</span>
+              <h3>Reference Match AI</h3>
+              <p>Upload a reference. Get the same vibe. AI analyzes tone, pacing, cuts, captions, aspect ratio, beat pattern, and zoom style.</p>
+            </div>
+
+            <div class="reference-grid">
+              <label class="ref-card" for="mainVideo">
+                <span class="ref-icon">01</span>
+                <h4>Your Video</h4>
+                <p>Jo video edit karni hai</p>
+                <input type="file" accept="video/*" id="mainVideo" />
+                <small id="mainVideoName">No video selected</small>
+              </label>
+
+              <label class="ref-card" for="referenceVideo">
+                <span class="ref-icon">02</span>
+                <h4>Reference Video</h4>
+                <p>Jaisi style chahiye</p>
+                <input type="file" accept="video/*" id="referenceVideo" />
+                <small id="referenceVideoName">No reference selected</small>
+              </label>
+            </div>
+
+            <div class="reference-workflow">
+              <div>
+                <label for="referencePrompt">Extra instruction</label>
+                <textarea id="referencePrompt" rows="4" placeholder="Extra instruction: Make it like the reference but more cinematic..."></textarea>
+                <button id="referenceGenerateBtn" class="primary generate-button generate reference-generate" type="button">
+                  <span class="reference-button-label">Match Reference Style ✨</span>
+                  <span class="button-loader" aria-hidden="true"></span>
+                </button>
+              </div>
+
+              <div class="reference-results">
+                <div class="reference-result-header">
+                  <strong>AI style analysis</strong>
+                  <span id="referenceStatus">Waiting for both videos</span>
+                </div>
+                <div class="analysis-grid">
+                  <div><span>Color tone</span><strong id="analysisTone">--</strong></div>
+                  <div><span>Speed</span><strong id="analysisSpeed">--</strong></div>
+                  <div><span>Cuts</span><strong id="analysisCuts">--</strong></div>
+                  <div><span>Transitions</span><strong id="analysisTransitions">--</strong></div>
+                  <div><span>Captions style</span><strong id="analysisCaptions">--</strong></div>
+                  <div><span>Aspect ratio</span><strong id="analysisRatio">--</strong></div>
+                  <div><span>Music / beat</span><strong id="analysisBeat">--</strong></div>
+                  <div><span>Zoom style</span><strong id="analysisZoom">--</strong></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="videoEditor" class="editor panel">
+            <div class="section-title stacked">
+              <span>Create with AI</span>
+              <h3>Video Editor</h3>
+            </div>
+
+            <div class="cards">
+              <label class="card upload-card" for="videoInput">
+                <h4>1. Upload Video</h4>
+                <input id="videoInput" type="file" accept="video/*" />
+                <small>MP4, MOV, WebM, or any browser-playable file</small>
+              </label>
+
+              <div class="card">
+                <h4>2. Describe Your Edit</h4>
+                <textarea id="prompt" rows="5">Make this into a short vertical reel, remove boring pauses, add bold captions, and highlight the most important moments.</textarea>
+              </div>
+
+              <div class="card">
+                <h4>3. Choose Style</h4>
+                <div class="styles">
+                  <button class="style-chip active" type="button" data-style="cinematic">Cinematic</button>
+                  <button class="style-chip" type="button" data-style="dramatic">Dramatic</button>
+                  <button class="style-chip" type="button" data-style="reel">Reel</button>
+                  <button class="style-chip" type="button" data-style="anime">Anime</button>
+                  <button class="style-chip" type="button" data-style="viral shorts">Viral Shorts</button>
+                </div>
+              </div>
+            </div>
+
+            <button id="generateBtn" class="primary generate-button generate" type="button">
+              <span class="button-label">Generate Video</span>
+              <span class="button-loader" aria-hidden="true"></span>
+            </button>
+          </section>
+
+          <section class="preview-workspace">
+            <article class="panel preview-panel">
+              <div class="section-title">
+                <div>
+                  <h3 id="projectName">Vixa Studio project</h3>
+                  <p id="status">Ready for your first edit</p>
+                </div>
+                <div class="segments" role="group" aria-label="Export format">
+                  <button class="segment active" data-format="9:16" type="button">9:16</button>
+                  <button class="segment" data-format="1:1" type="button">1:1</button>
+                  <button class="segment" data-format="16:9" type="button">16:9</button>
+                </div>
+              </div>
+              <div class="stage-wrap">
+                <div id="stage" class="stage vertical">
+                  <video id="video" controls playsinline></video>
+                  <div id="captionOverlay" class="caption-overlay">Upload a video to preview edits</div>
+                  <div id="focusFrame" class="focus-frame"></div>
+                </div>
+              </div>
+              <a id="downloadLink" class="download-link" href="#" download hidden>Download Output</a>
+            </article>
+
+            <article class="panel tools-panel">
+              <h3>Quick AI Tools</h3>
+              <div class="tool-grid">
+                <button class="tool-card" type="button" data-tool="captions">Auto Subtitle</button>
+                <button class="tool-card" type="button" data-tool="silence">Remove Silence</button>
+                <button class="tool-card" type="button" data-tool="zoom">AI Highlights</button>
+                <button class="tool-card" type="button" data-tool="music">AI Voiceover</button>
+              </div>
+              <h3>Smart controls</h3>
+              <label class="toggle"><input id="captionsToggle" type="checkbox" checked /> Captions</label>
+              <label class="toggle"><input id="zoomToggle" type="checkbox" checked /> Auto zoom</label>
+              <label class="toggle"><input id="silenceToggle" type="checkbox" checked /> Remove silence</label>
+              <label class="toggle"><input id="musicToggle" type="checkbox" /> Background music</label>
+              <h3>Output</h3>
+              <div class="metric"><span>Duration</span><strong id="durationMetric">--</strong></div>
+              <div class="metric"><span>Cuts</span><strong id="cutsMetric">0</strong></div>
+              <div class="metric"><span>Style</span><strong id="styleMetric">Short reel</strong></div>
+            </article>
+          </section>
+
+          <section class="timeline-panel panel">
+            <div class="section-title">
+              <div>
+                <h3>AI edit plan</h3>
+                <p id="planSummary">No cuts yet</p>
+              </div>
+              <div>
+                <button id="applyBtn" class="secondary" type="button">Apply plan</button>
+                <button id="exportBtn" class="secondary" type="button">Export plan</button>
+              </div>
+            </div>
+            <div id="timeline" class="timeline"></div>
+          </section>
+
+          <section id="photoToVideo" class="photo-video-panel panel">
+            <div class="section-title stacked">
+              <span>Photo to Video AI</span>
+              <h3>Animate still images into cinematic AI videos</h3>
+            </div>
+
+            <div class="photo-video-grid">
+              <div class="photo-controls">
+                <label class="upload-zone photo-upload" for="photoInput">
+                  <input id="photoInput" type="file" accept="image/*" multiple />
+                  <span class="upload-icon">+</span>
+                  <strong>Upload one or multiple images</strong>
+                  <small>JPG, PNG, WebP, or any browser-playable image</small>
+                </label>
+
+                <label for="photoPrompt">Motion prompt</label>
+                <textarea id="photoPrompt" rows="4">Make this photo cinematic with slow zoom and rain effect</textarea>
+
+                <label>Motion style</label>
+                <div class="choice-grid">
+                  <button class="motion-chip active" type="button" data-motion="slow-zoom">Slow Zoom</button>
+                  <button class="motion-chip" type="button" data-motion="pan-left">Pan Left</button>
+                  <button class="motion-chip" type="button" data-motion="pan-right">Pan Right</button>
+                  <button class="motion-chip" type="button" data-motion="parallax">3D Parallax</button>
+                  <button class="motion-chip" type="button" data-motion="cinematic">Cinematic Motion</button>
+                  <button class="motion-chip" type="button" data-motion="anime">Anime Motion</button>
+                  <button class="motion-chip" type="button" data-motion="product">Product Showcase</button>
+                </div>
+
+                <div class="selector-row">
+                  <div>
+                    <label>Duration</label>
+                    <div class="mini-segments">
+                      <button class="duration-chip active" type="button" data-duration="5">5 sec</button>
+                      <button class="duration-chip" type="button" data-duration="10">10 sec</button>
+                      <button class="duration-chip" type="button" data-duration="15">15 sec</button>
+                      <button class="duration-chip" type="button" data-duration="30">30 sec</button>
+                    </div>
+                  </div>
+                  <div>
+                    <label>Aspect ratio</label>
+                    <div class="mini-segments">
+                      <button class="photo-ratio-chip active" type="button" data-ratio="16:9">16:9</button>
+                      <button class="photo-ratio-chip" type="button" data-ratio="9:16">9:16</button>
+                      <button class="photo-ratio-chip" type="button" data-ratio="1:1">1:1</button>
+                    </div>
+                  </div>
+                </div>
+
+                <button id="photoGenerateBtn" class="primary generate-button generate" type="button">
+                  <span class="photo-button-label">Generate Video from Photos</span>
+                  <span class="button-loader" aria-hidden="true"></span>
+                </button>
+              </div>
+
+              <div class="photo-preview-card">
+                <div class="section-title">
+                  <h3>Generated video preview</h3>
+                  <p id="photoPreviewMeta">Upload photos and generate motion</p>
+                </div>
+                <div id="photoStage" class="photo-stage ratio-wide motion-slow-zoom">
+                  <div id="photoPlaceholder" class="photo-placeholder">
+                    <strong>Photo to Video AI</strong>
+                    <span>Cinematic motion preview will appear here</span>
+                  </div>
+                  <div id="photoPreviewStack" class="photo-preview-stack" hidden>
+                    <img id="photoPreviewImage" alt="Generated photo video preview" />
+                    <div class="motion-sheen"></div>
+                    <div class="rain-effect"></div>
+                    <div id="photoPreviewCaption" class="photo-preview-caption">Cinematic slow zoom</div>
+                    <div class="photo-progress"><span id="photoProgressBar"></span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel captions-panel">
+            <h3>Captions</h3>
+            <div id="captionsList" class="captions-list"></div>
+          </section>
+        </section>
+
+        <aside class="quick-column">
+          <section class="panel quick-actions">
+            <h3>Quick Actions</h3>
+            <button type="button" data-tool="captions"><strong>Auto Subtitle</strong><span>Generate subtitles for video</span></button>
+            <button type="button" data-tool="silence"><strong>Remove Silence</strong><span>Cut silent parts automatically</span></button>
+            <button type="button" data-tool="zoom"><strong>AI Highlights</strong><span>Find best moments</span></button>
+            <button type="button"><strong>Convert to Reel</strong><span>9:16 vertical video</span></button>
+            <button type="button" data-tool="music"><strong>AI Voiceover</strong><span>Text to speech narration</span></button>
+          </section>
+        </aside>
+      </div>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>

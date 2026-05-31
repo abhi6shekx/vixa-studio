@@ -1,0 +1,604 @@
+const videoInput = document.querySelector("#videoInput");
+const video = document.querySelector("#video");
+const projectName = document.querySelector("#projectName");
+const statusText = document.querySelector("#status");
+const newProjectBtn = document.querySelector("#newProjectBtn");
+const generateBtn = document.querySelector("#generateBtn");
+const topGenerateBtn = document.querySelector("#topGenerateBtn");
+const exportBtn = document.querySelector("#exportBtn");
+const applyBtn = document.querySelector("#applyBtn");
+const promptInput = document.querySelector("#prompt");
+const stage = document.querySelector("#stage");
+const downloadLink = document.querySelector("#downloadLink");
+const captionOverlay = document.querySelector("#captionOverlay");
+const timeline = document.querySelector("#timeline");
+const captionsList = document.querySelector("#captionsList");
+const durationMetric = document.querySelector("#durationMetric");
+const cutsMetric = document.querySelector("#cutsMetric");
+const styleMetric = document.querySelector("#styleMetric");
+const planSummary = document.querySelector("#planSummary");
+const captionsToggle = document.querySelector("#captionsToggle");
+const zoomToggle = document.querySelector("#zoomToggle");
+const silenceToggle = document.querySelector("#silenceToggle");
+const musicToggle = document.querySelector("#musicToggle");
+const buttonLabel = generateBtn?.querySelector(".button-label");
+const photoInput = document.querySelector("#photoInput");
+const photoPrompt = document.querySelector("#photoPrompt");
+const photoGenerateBtn = document.querySelector("#photoGenerateBtn");
+const photoButtonLabel = photoGenerateBtn?.querySelector(".photo-button-label");
+const photoStage = document.querySelector("#photoStage");
+const photoPlaceholder = document.querySelector("#photoPlaceholder");
+const photoPreviewStack = document.querySelector("#photoPreviewStack");
+const photoPreviewImage = document.querySelector("#photoPreviewImage");
+const photoPreviewCaption = document.querySelector("#photoPreviewCaption");
+const photoPreviewMeta = document.querySelector("#photoPreviewMeta");
+const mainVideoInput = document.querySelector("#mainVideo");
+const referenceVideoInput = document.querySelector("#referenceVideo");
+const referencePrompt = document.querySelector("#referencePrompt");
+const referenceGenerateBtn = document.querySelector("#referenceGenerateBtn");
+const referenceButtonLabel = referenceGenerateBtn?.querySelector(".reference-button-label");
+const mainVideoName = document.querySelector("#mainVideoName");
+const referenceVideoName = document.querySelector("#referenceVideoName");
+const referenceStatus = document.querySelector("#referenceStatus");
+const analysisTone = document.querySelector("#analysisTone");
+const analysisSpeed = document.querySelector("#analysisSpeed");
+const analysisCuts = document.querySelector("#analysisCuts");
+const analysisTransitions = document.querySelector("#analysisTransitions");
+const analysisCaptions = document.querySelector("#analysisCaptions");
+const analysisRatio = document.querySelector("#analysisRatio");
+const analysisBeat = document.querySelector("#analysisBeat");
+const analysisZoom = document.querySelector("#analysisZoom");
+
+let editPlan = [];
+let captions = [];
+let activeCaptionIndex = 0;
+let selectedFile = null;
+let selectedStyle = "cinematic";
+let selectedPhotoMotion = "slow-zoom";
+let selectedPhotoDuration = 5;
+let selectedPhotoRatio = "16:9";
+let photoUrls = [];
+let photoTimer = null;
+let photoIndex = 0;
+
+const photoMotionLabels = {
+  "slow-zoom": "Slow Zoom",
+  "pan-left": "Pan Left",
+  "pan-right": "Pan Right",
+  parallax: "3D Parallax",
+  cinematic: "Cinematic Motion",
+  anime: "Anime Motion",
+  product: "Product Showcase",
+};
+
+function formatTime(seconds) {
+  if (!Number.isFinite(seconds)) return "--";
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60).toString().padStart(2, "0");
+  return `${mins}:${secs}`;
+}
+
+function makePlan(duration) {
+  const safeDuration = Math.max(duration || 36, 18);
+  const parts = [
+    { label: "Hook", start: 0, end: Math.min(4, safeDuration * 0.12), type: "keep" },
+    { label: "Pause", start: safeDuration * 0.12, end: safeDuration * 0.2, type: "cut" },
+    { label: "Point 1", start: safeDuration * 0.2, end: safeDuration * 0.42, type: "keep" },
+    { label: "Dead air", start: safeDuration * 0.42, end: safeDuration * 0.5, type: "cut" },
+    { label: "Point 2", start: safeDuration * 0.5, end: safeDuration * 0.74, type: "keep" },
+    { label: "CTA", start: safeDuration * 0.74, end: safeDuration, type: "keep" },
+  ];
+
+  return parts.map((part) => ({
+    ...part,
+    start: Math.max(0, part.start),
+    end: Math.min(safeDuration, part.end),
+  }));
+}
+
+function makeCaptions(plan, prompt) {
+  const wantsShort = /short|reel|tiktok|viral|clip/i.test(prompt);
+  const wantsDrama = /dramatic|anime|cinematic/i.test(prompt);
+  const lines = wantsShort
+    ? ["Here is the hook", "This is the key moment", "Watch what changes next", "Save this idea"]
+    : wantsDrama
+      ? ["A cinematic opening", "The tension builds", "A polished transition", "The final reveal"]
+    : ["AI caption generated", "Important section", "Main takeaway", "Final note"];
+
+  return plan
+    .filter((clip) => clip.type === "keep")
+    .slice(0, 4)
+    .map((clip, index) => ({
+      start: clip.start,
+      end: clip.end,
+      text: lines[index],
+    }));
+}
+
+function renderTimeline() {
+  timeline.innerHTML = "";
+  editPlan.forEach((clip) => {
+    const item = document.createElement("button");
+    item.className = `clip ${clip.type}`;
+    item.innerHTML = `<strong>${clip.label}</strong><small>${formatTime(clip.start)} - ${formatTime(clip.end)}</small>`;
+    item.addEventListener("click", () => {
+      if (video.src) {
+        video.currentTime = clip.start;
+        video.play();
+      }
+    });
+    timeline.appendChild(item);
+  });
+}
+
+function renderCaptions() {
+  captionsList.innerHTML = "";
+  captions.forEach((caption) => {
+    const item = document.createElement("div");
+    item.className = "caption-item";
+    item.innerHTML = `<span>${formatTime(caption.start)} - ${formatTime(caption.end)}</span>${caption.text}`;
+    captionsList.appendChild(item);
+  });
+}
+
+function updateCaptionOverlay() {
+  if (!captionsToggle.checked) {
+    captionOverlay.style.display = "none";
+    return;
+  }
+  captionOverlay.style.display = "block";
+
+  const match = captions.findIndex((caption) => video.currentTime >= caption.start && video.currentTime <= caption.end);
+  if (match >= 0) activeCaptionIndex = match;
+  captionOverlay.textContent = captions[activeCaptionIndex]?.text || "AI captions will appear here";
+}
+
+function setGenerateLoading(isLoading) {
+  generateBtn.disabled = isLoading;
+  topGenerateBtn.disabled = isLoading;
+  generateBtn.classList.toggle("is-loading", isLoading);
+  if (buttonLabel) buttonLabel.textContent = isLoading ? "Generating" : "Generate Video";
+  topGenerateBtn.textContent = isLoading ? "Generating..." : "Start New Project";
+}
+
+function setPhotoLoading(isLoading) {
+  photoGenerateBtn.disabled = isLoading;
+  photoGenerateBtn.classList.toggle("is-loading", isLoading);
+  if (photoButtonLabel) {
+    photoButtonLabel.textContent = isLoading ? "Generating" : "Generate Video from Photos";
+  }
+}
+
+function setReferenceLoading(isLoading) {
+  referenceGenerateBtn.disabled = isLoading;
+  referenceGenerateBtn.classList.toggle("is-loading", isLoading);
+  if (referenceButtonLabel) {
+    referenceButtonLabel.textContent = isLoading ? "Matching Reference" : "Match Reference Style ✨";
+  }
+}
+
+function clearPhotoTimer() {
+  if (photoTimer) {
+    clearInterval(photoTimer);
+    photoTimer = null;
+  }
+}
+
+function updatePhotoMotionClass() {
+  photoStage.classList.remove(
+    "motion-slow-zoom",
+    "motion-pan-left",
+    "motion-pan-right",
+    "motion-parallax",
+    "motion-cinematic",
+    "motion-anime",
+    "motion-product",
+  );
+  photoStage.classList.add(`motion-${selectedPhotoMotion}`);
+}
+
+function updatePhotoRatioClass() {
+  photoStage.classList.remove("ratio-wide", "ratio-vertical", "ratio-square");
+  const ratioClass = selectedPhotoRatio === "9:16" ? "ratio-vertical" : selectedPhotoRatio === "1:1" ? "ratio-square" : "ratio-wide";
+  photoStage.classList.add(ratioClass);
+}
+
+function resetPhotoObjectUrls() {
+  photoUrls.forEach((url) => URL.revokeObjectURL(url));
+  photoUrls = [];
+}
+
+function showPhotoFrame(index) {
+  if (!photoUrls.length) return;
+  photoPreviewStack.classList.add("is-switching");
+  setTimeout(() => {
+    photoPreviewImage.src = photoUrls[index];
+    photoPreviewStack.classList.remove("is-switching");
+  }, 160);
+}
+
+function buildPhotoCaption(prompt) {
+  const label = photoMotionLabels[selectedPhotoMotion] || "Cinematic Motion";
+  const effect = /rain|storm|drizzle/i.test(prompt) ? "Rain effect" : "AI motion";
+  return `${label} • ${effect}`;
+}
+
+function resetNewProject() {
+  selectedFile = null;
+  editPlan = makePlan(36);
+  captions = makeCaptions(editPlan, promptInput.value || "cinematic");
+  activeCaptionIndex = 0;
+
+  video.pause();
+  video.removeAttribute("src");
+  video.load();
+  videoInput.value = "";
+  mainVideoInput.value = "";
+  referenceVideoInput.value = "";
+  photoInput.value = "";
+
+  projectName.textContent = "Untitled Vixa project";
+  statusText.textContent = "New project ready. Upload a video to start.";
+  captionOverlay.style.display = "block";
+  captionOverlay.textContent = "Upload a video to preview edits";
+  mainVideoName.textContent = "No video selected";
+  referenceVideoName.textContent = "No reference selected";
+  referenceStatus.textContent = "Waiting for both videos";
+  photoPreviewMeta.textContent = "Upload photos and generate motion";
+  photoPlaceholder.hidden = false;
+  photoPreviewStack.hidden = true;
+  photoStage.classList.remove("is-playing", "has-rain");
+  clearPhotoTimer();
+  resetPhotoObjectUrls();
+
+  if (downloadLink) {
+    downloadLink.hidden = true;
+    downloadLink.href = "#";
+  }
+
+  updateReferenceAnalysis(null);
+  renderTimeline();
+  renderCaptions();
+  cutsMetric.textContent = editPlan.filter((clip) => clip.type === "cut").length;
+  durationMetric.textContent = "--";
+  planSummary.textContent = "New project created";
+
+  document.querySelectorAll(".nav-item").forEach((item) => item.classList.remove("active"));
+  document.querySelector('[data-scroll="videoEditor"]')?.classList.add("active");
+  const editorTop = document.querySelector("#videoEditor")?.offsetTop ?? 0;
+  window.scrollTo({ top: Math.max(0, editorTop - 16), behavior: "smooth" });
+}
+
+function generatePhotoVideo() {
+  const files = Array.from(photoInput.files || []);
+  const prompt = photoPrompt.value.trim();
+
+  if (!files.length) {
+    photoPreviewMeta.textContent = "Choose at least one image first";
+    statusText.textContent = "Photo to Video needs one or more images";
+    photoInput.focus();
+    return;
+  }
+
+  setPhotoLoading(true);
+  statusText.textContent = "Generating cinematic motion from photos...";
+  photoPreviewMeta.textContent = "Building AI motion preview...";
+
+  setTimeout(() => {
+    clearPhotoTimer();
+    resetPhotoObjectUrls();
+    photoUrls = files.map((file) => URL.createObjectURL(file));
+    photoIndex = 0;
+
+    updatePhotoMotionClass();
+    updatePhotoRatioClass();
+    photoStage.style.setProperty("--photo-duration", `${selectedPhotoDuration}s`);
+    photoStage.classList.toggle("has-rain", /rain|storm|drizzle/i.test(prompt));
+    photoStage.classList.remove("is-playing");
+    photoPlaceholder.hidden = true;
+    photoPreviewStack.hidden = false;
+    showPhotoFrame(photoIndex);
+    photoPreviewCaption.textContent = buildPhotoCaption(prompt);
+    photoPreviewMeta.textContent = `${files.length} image${files.length === 1 ? "" : "s"} • ${selectedPhotoDuration} sec • ${selectedPhotoRatio}`;
+
+    requestAnimationFrame(() => {
+      photoStage.classList.add("is-playing");
+    });
+
+    if (photoUrls.length > 1) {
+      const switchDelay = Math.max(900, Math.floor((selectedPhotoDuration * 1000) / photoUrls.length));
+      photoTimer = setInterval(() => {
+        photoIndex = (photoIndex + 1) % photoUrls.length;
+        showPhotoFrame(photoIndex);
+      }, switchDelay);
+    }
+
+    setPhotoLoading(false);
+    statusText.textContent = "Photo to Video AI preview generated";
+  }, 900);
+}
+
+function updateReferenceAnalysis(analysis) {
+  analysisTone.textContent = analysis?.color_tone || "--";
+  analysisSpeed.textContent = analysis?.speed || "--";
+  analysisCuts.textContent = analysis?.cuts || "--";
+  analysisTransitions.textContent = analysis?.transitions || "--";
+  analysisCaptions.textContent = analysis?.captions_style || "--";
+  analysisRatio.textContent = analysis?.aspect_ratio || "--";
+  analysisBeat.textContent = analysis?.music_beat || "--";
+  analysisZoom.textContent = analysis?.zoom_style || "--";
+}
+
+async function generateReferenceEdit() {
+  const mainFile = mainVideoInput.files?.[0];
+  const referenceFile = referenceVideoInput.files?.[0];
+  const prompt = referencePrompt.value.trim();
+
+  if (!mainFile || !referenceFile) {
+    referenceStatus.textContent = "Upload both videos first";
+    statusText.textContent = "Reference Match AI needs your video and a reference video";
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("main_video", mainFile);
+  formData.append("reference_video", referenceFile);
+  formData.append("prompt", prompt);
+
+  setReferenceLoading(true);
+  referenceStatus.textContent = "Analyzing reference style...";
+  statusText.textContent = "Matching your video to the reference vibe...";
+
+  try {
+    const response = await fetch("/reference-edit", { method: "POST", body: formData });
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.message || "Reference style match failed");
+    }
+
+    updateReferenceAnalysis(result.analysis);
+    referenceStatus.textContent = result.message || "Reference style matched";
+    statusText.textContent = "Reference Match AI generated a style plan";
+
+    if (result.output_url) {
+      video.src = result.output_url;
+      video.load();
+      projectName.textContent = "Reference matched edit";
+      if (downloadLink) {
+        downloadLink.href = result.download_url || result.output_url;
+        downloadLink.hidden = false;
+      }
+    } else {
+      video.src = URL.createObjectURL(mainFile);
+      projectName.textContent = mainFile.name;
+      captionOverlay.textContent = "Reference style plan ready";
+    }
+  } catch (error) {
+    referenceStatus.textContent = "Could not match reference";
+    statusText.textContent = error.message || "Reference Match AI failed";
+  } finally {
+    setReferenceLoading(false);
+  }
+}
+
+function applyServerPlan(serverPlan) {
+  if (!serverPlan) return;
+  editPlan = serverPlan.cuts || editPlan;
+  captions = serverPlan.captions
+    ? editPlan
+        .filter((clip) => clip.type === "keep")
+        .slice(0, 4)
+        .map((clip, index) => ({
+          start: clip.start,
+          end: clip.end,
+          text: ["Strong hook", "Key moment", "Main takeaway", "Final beat"][index] || "AI caption",
+        }))
+    : [];
+}
+
+async function generatePlan() {
+  const prompt = promptInput.value.trim();
+  const styledPrompt = `${prompt} ${selectedStyle}`.trim();
+  setGenerateLoading(true);
+  statusText.textContent = selectedFile ? "Uploading video to AI engine..." : "Generating browser preview plan...";
+
+  if (selectedFile && location.protocol !== "file:") {
+    const formData = new FormData();
+    formData.append("video", selectedFile);
+    formData.append("prompt", styledPrompt);
+
+    try {
+      const response = await fetch("/edit", { method: "POST", body: formData });
+      const result = await response.json();
+      applyServerPlan(result.plan);
+      if (result.output_url) {
+        video.src = result.output_url;
+        video.load();
+        if (downloadLink) {
+          downloadLink.href = result.download_url || result.output_url;
+          downloadLink.hidden = false;
+        }
+      }
+      statusText.textContent = result.message || "AI edit generated";
+    } catch (error) {
+      editPlan = makePlan(video.duration);
+      captions = makeCaptions(editPlan, styledPrompt);
+      statusText.textContent = "Server render failed, showing browser preview plan";
+    }
+  } else {
+    editPlan = makePlan(video.duration);
+    captions = makeCaptions(editPlan, styledPrompt);
+    statusText.textContent = "Browser preview plan generated";
+  }
+
+  renderTimeline();
+  renderCaptions();
+
+  const cuts = editPlan.filter((clip) => clip.type === "cut").length;
+  const keptSeconds = editPlan.filter((clip) => clip.type === "keep").reduce((sum, clip) => sum + clip.end - clip.start, 0);
+  cutsMetric.textContent = cuts;
+  durationMetric.textContent = formatTime(keptSeconds);
+  styleMetric.textContent = selectedStyle.replace(/\b\w/g, (letter) => letter.toUpperCase());
+  planSummary.textContent = `${cuts} cuts, ${captions.length} captions, ${formatTime(keptSeconds)} output`;
+  updateCaptionOverlay();
+  setGenerateLoading(false);
+}
+
+videoInput.addEventListener("change", () => {
+  const file = videoInput.files?.[0];
+  if (!file) return;
+  selectedFile = file;
+  video.src = URL.createObjectURL(file);
+  projectName.textContent = file.name;
+  statusText.textContent = "Video loaded";
+  captionOverlay.textContent = "Click generate AI edit";
+});
+
+video.addEventListener("loadedmetadata", () => {
+  durationMetric.textContent = formatTime(video.duration);
+});
+
+video.addEventListener("timeupdate", updateCaptionOverlay);
+
+generateBtn.addEventListener("click", generatePlan);
+topGenerateBtn.addEventListener("click", resetNewProject);
+newProjectBtn.addEventListener("click", resetNewProject);
+
+applyBtn.addEventListener("click", () => {
+  if (!editPlan.length) generatePlan();
+  stage.classList.toggle("ai-focus", zoomToggle.checked);
+  statusText.textContent = silenceToggle.checked ? "Plan applied: silence sections marked for removal" : "Plan applied";
+  updateCaptionOverlay();
+});
+
+exportBtn.addEventListener("click", () => {
+  if (!editPlan.length) generatePlan();
+  const exported = {
+    prompt: promptInput.value,
+    style: selectedStyle,
+    format: document.querySelector(".segment.active").dataset.format,
+    captions: captionsToggle.checked,
+    autoZoom: zoomToggle.checked,
+    removeSilence: silenceToggle.checked,
+    backgroundMusic: musicToggle.checked,
+    timeline: editPlan,
+  };
+  const blob = new Blob([JSON.stringify(exported, null, 2)], { type: "application/json" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "ai-video-edit-plan.json";
+  link.click();
+  URL.revokeObjectURL(link.href);
+  statusText.textContent = "Preview edit plan exported";
+});
+
+document.querySelectorAll(".segment").forEach((button) => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll(".segment").forEach((item) => item.classList.remove("active"));
+    button.classList.add("active");
+    stage.classList.remove("vertical", "square", "wide");
+    const format = button.dataset.format;
+    stage.classList.add(format === "9:16" ? "vertical" : format === "1:1" ? "square" : "wide");
+  });
+});
+
+document.querySelectorAll(".style-chip").forEach((button) => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll(".style-chip").forEach((item) => item.classList.remove("active"));
+    button.classList.add("active");
+    selectedStyle = button.dataset.style;
+    styleMetric.textContent = button.textContent;
+    statusText.textContent = `${button.textContent} style selected`;
+  });
+});
+
+document.querySelectorAll("[data-template]").forEach((button) => {
+  button.addEventListener("click", () => {
+    promptInput.value = button.dataset.template;
+    statusText.textContent = "Template copied into prompt editor";
+    promptInput.focus();
+  });
+});
+
+document.querySelectorAll("[data-tool]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const tool = button.dataset.tool;
+    if (tool === "captions") captionsToggle.checked = true;
+    if (tool === "silence") silenceToggle.checked = true;
+    if (tool === "zoom") zoomToggle.checked = true;
+    if (tool === "music") musicToggle.checked = true;
+    button.classList.add("active");
+    statusText.textContent = `${button.querySelector("strong")?.textContent || button.textContent} enabled`;
+  });
+});
+
+document.querySelectorAll(".nav-item").forEach((button) => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll(".nav-item").forEach((item) => item.classList.remove("active"));
+    button.classList.add("active");
+    const target = button.dataset.scroll;
+    if (target === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else if (target) {
+      document.querySelector(`#${target}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
+});
+
+document.querySelectorAll(".motion-chip").forEach((button) => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll(".motion-chip").forEach((item) => item.classList.remove("active"));
+    button.classList.add("active");
+    selectedPhotoMotion = button.dataset.motion;
+    updatePhotoMotionClass();
+    photoPreviewMeta.textContent = `${button.textContent} selected`;
+  });
+});
+
+document.querySelectorAll(".duration-chip").forEach((button) => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll(".duration-chip").forEach((item) => item.classList.remove("active"));
+    button.classList.add("active");
+    selectedPhotoDuration = Number(button.dataset.duration);
+    photoStage.style.setProperty("--photo-duration", `${selectedPhotoDuration}s`);
+    photoPreviewMeta.textContent = `${button.textContent} duration selected`;
+  });
+});
+
+document.querySelectorAll(".photo-ratio-chip").forEach((button) => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll(".photo-ratio-chip").forEach((item) => item.classList.remove("active"));
+    button.classList.add("active");
+    selectedPhotoRatio = button.dataset.ratio;
+    updatePhotoRatioClass();
+    photoPreviewMeta.textContent = `${selectedPhotoRatio} aspect ratio selected`;
+  });
+});
+
+photoInput.addEventListener("change", () => {
+  const count = photoInput.files?.length || 0;
+  photoPreviewMeta.textContent = count ? `${count} image${count === 1 ? "" : "s"} ready for motion` : "Upload photos and generate motion";
+  statusText.textContent = count ? "Photos loaded for Photo to Video AI" : statusText.textContent;
+});
+
+photoGenerateBtn.addEventListener("click", generatePhotoVideo);
+
+mainVideoInput.addEventListener("change", () => {
+  const file = mainVideoInput.files?.[0];
+  mainVideoName.textContent = file ? file.name : "No video selected";
+  if (file) {
+    referenceStatus.textContent = "Your video loaded";
+  }
+});
+
+referenceVideoInput.addEventListener("change", () => {
+  const file = referenceVideoInput.files?.[0];
+  referenceVideoName.textContent = file ? file.name : "No reference selected";
+  if (file) {
+    referenceStatus.textContent = "Reference video loaded";
+  }
+});
+
+referenceGenerateBtn.addEventListener("click", generateReferenceEdit);
+
+generatePlan();
