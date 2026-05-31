@@ -93,23 +93,24 @@ textarea {
 .brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .brand-logo {
-  width: 46px;
-  height: 42px;
+  width: 56px;
+  height: 56px;
   display: block;
-  border-radius: 12px;
-  background:
-    linear-gradient(90deg, transparent 34%, var(--purple) 34% 48%, transparent 48%),
-    linear-gradient(135deg, var(--blue), var(--purple) 48%, var(--violet));
-  clip-path: polygon(0 0, 28% 0, 28% 100%, 0 100%, 0 62%, 42% 50%, 0 38%);
-  box-shadow: var(--glow);
+  flex: 0 0 auto;
+  border-radius: 16px;
+  object-fit: cover;
+  border: 1px solid rgba(197, 111, 255, 0.34);
+  box-shadow:
+    0 0 22px rgba(177, 76, 255, 0.42),
+    0 0 42px rgba(72, 139, 255, 0.18);
 }
 
 .brand h1 {
-  font-size: 22px;
+  font-size: 21px;
   line-height: 1.1;
 }
 

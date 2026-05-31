@@ -237,7 +237,8 @@ function showRenderedOutput(result, fallbackName = "Vixa AI render") {
   return true;
 }
 
-function resetNewProject() {
+function resetNewProject(options = {}) {
+  const { scrollToEditor = true } = options;
   selectedFile = null;
   editPlan = makePlan(36);
   captions = makeCaptions(editPlan, promptInput.value || "cinematic");
@@ -279,8 +280,10 @@ function resetNewProject() {
 
   document.querySelectorAll(".nav-item").forEach((item) => item.classList.remove("active"));
   document.querySelector('[data-scroll="videoEditor"]')?.classList.add("active");
-  const editorTop = document.querySelector("#videoEditor")?.offsetTop ?? 0;
-  window.scrollTo({ top: Math.max(0, editorTop - 16), behavior: "smooth" });
+  if (scrollToEditor) {
+    const editorTop = document.querySelector("#videoEditor")?.offsetTop ?? 0;
+    window.scrollTo({ top: Math.max(0, editorTop - 16), behavior: "smooth" });
+  }
 }
 
 async function generatePhotoVideo() {
@@ -623,4 +626,4 @@ referenceVideoInput.addEventListener("change", () => {
 
 referenceGenerateBtn.addEventListener("click", generateReferenceEdit);
 
-resetNewProject();
+resetNewProject({ scrollToEditor: false });
