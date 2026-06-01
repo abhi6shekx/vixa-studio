@@ -32,6 +32,7 @@ const photoPreviewStack = document.querySelector("#photoPreviewStack");
 const photoPreviewImage = document.querySelector("#photoPreviewImage");
 const photoPreviewCaption = document.querySelector("#photoPreviewCaption");
 const photoPreviewMeta = document.querySelector("#photoPreviewMeta");
+const photoRenderedVideo = document.querySelector("#photoRenderedVideo");
 const mainVideoInput = document.querySelector("#mainVideo");
 const referenceVideoInput = document.querySelector("#referenceVideo");
 const referencePrompt = document.querySelector("#referencePrompt");
@@ -262,6 +263,9 @@ function resetNewProject(options = {}) {
   photoPreviewMeta.textContent = "Upload photos and generate motion";
   photoPlaceholder.hidden = false;
   photoPreviewStack.hidden = true;
+  photoRenderedVideo.hidden = true;
+  photoRenderedVideo.removeAttribute("src");
+  photoRenderedVideo.load();
   photoStage.classList.remove("is-playing", "has-rain");
   clearPhotoTimer();
   resetPhotoObjectUrls();
@@ -315,33 +319,19 @@ async function generatePhotoVideo() {
       throw new Error(result.message || "Photo to Video render failed");
     }
 
-    clearPhotoTimer();
-    resetPhotoObjectUrls();
-    photoUrls = files.map((file) => URL.createObjectURL(file));
-    photoIndex = 0;
-
     updatePhotoMotionClass();
     updatePhotoRatioClass();
     photoStage.style.setProperty("--photo-duration", `${selectedPhotoDuration}s`);
-    photoStage.classList.toggle("has-rain", /rain|storm|drizzle/i.test(prompt));
+    photoStage.classList.remove("has-rain", "is-playing");
+    clearPhotoTimer();
+    resetPhotoObjectUrls();
+    photoPreviewStack.hidden = true;
     photoStage.classList.remove("is-playing");
     photoPlaceholder.hidden = true;
-    photoPreviewStack.hidden = false;
-    showPhotoFrame(photoIndex);
-    photoPreviewCaption.textContent = buildPhotoCaption(prompt);
-    photoPreviewMeta.textContent = `${files.length} image${files.length === 1 ? "" : "s"} • ${selectedPhotoDuration} sec • ${selectedPhotoRatio}`;
-
-    requestAnimationFrame(() => {
-      photoStage.classList.add("is-playing");
-    });
-
-    if (photoUrls.length > 1) {
-      const switchDelay = Math.max(900, Math.floor((selectedPhotoDuration * 1000) / photoUrls.length));
-      photoTimer = setInterval(() => {
-        photoIndex = (photoIndex + 1) % photoUrls.length;
-        showPhotoFrame(photoIndex);
-      }, switchDelay);
-    }
+    photoRenderedVideo.hidden = false;
+    photoRenderedVideo.src = result.output_url;
+    photoRenderedVideo.load();
+    photoRenderedVideo.play().catch(() => {});
 
     showRenderedOutput(result, "Photo to Video render");
     photoPreviewMeta.textContent = `${files.length} image${files.length === 1 ? "" : "s"} • real MP4 rendered • ${selectedPhotoDuration} sec • ${selectedPhotoRatio}`;

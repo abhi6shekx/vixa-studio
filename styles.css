@@ -1201,6 +1201,20 @@ video {
   opacity: 0.15;
 }
 
+.photo-rendered-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  background: #02040a;
+}
+
+.photo-rendered-video[hidden] {
+  display: none;
+}
+
 .motion-sheen {
   position: absolute;
   inset: 0;
