@@ -4,3 +4,4 @@ moviepy
 openai-whisper
 torch
 openai
+python-dotenv

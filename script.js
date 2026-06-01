@@ -55,6 +55,14 @@ const aiPromptSource = document.querySelector("#aiPromptSource");
 const aiSceneCount = document.querySelector("#aiSceneCount");
 const aiCaptionCount = document.querySelector("#aiCaptionCount");
 const aiSilenceCount = document.querySelector("#aiSilenceCount");
+const settingsAiProvider = document.querySelector("#settingsAiProvider");
+const settingsAiModel = document.querySelector("#settingsAiModel");
+const settingsOpenAi = document.querySelector("#settingsOpenAi");
+const settingsWhisper = document.querySelector("#settingsWhisper");
+const settingsSceneAi = document.querySelector("#settingsSceneAi");
+const aiTestPrompt = document.querySelector("#aiTestPrompt");
+const aiTestBtn = document.querySelector("#aiTestBtn");
+const aiTestOutput = document.querySelector("#aiTestOutput");
 
 const pageRoutes = {
   "/": "dashboard",
@@ -227,6 +235,49 @@ async function checkBackendHealth() {
     backendStatus.className = "backend-status offline";
     backendStatus.querySelector("strong").textContent = "Backend Offline";
     statusText.textContent = "Backend is not connected. Run python3 app.py and open http://127.0.0.1:5050";
+  }
+}
+
+function yesNo(value) {
+  return value ? "Connected" : "Not connected";
+}
+
+async function refreshAiSettings() {
+  if (!settingsAiProvider) return;
+  try {
+    const response = await fetch("/api/ai/status");
+    const status = await response.json();
+    settingsAiProvider.textContent = status.provider === "openai" ? "OpenAI" : "Local AI";
+    settingsAiModel.textContent = status.model || "--";
+    settingsOpenAi.textContent = yesNo(status.openai);
+    settingsWhisper.textContent = yesNo(status.whisper);
+    settingsSceneAi.textContent = yesNo(status.scene_ai);
+  } catch (error) {
+    settingsAiProvider.textContent = "Offline";
+    settingsAiModel.textContent = "--";
+    settingsOpenAi.textContent = "--";
+    settingsWhisper.textContent = "--";
+    settingsSceneAi.textContent = "--";
+  }
+}
+
+async function testAiBrain() {
+  if (!aiTestPrompt || !aiTestOutput) return;
+  aiTestBtn.disabled = true;
+  aiTestOutput.textContent = "Thinking...";
+  try {
+    const response = await fetch("/api/ai/prompt", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: aiTestPrompt.value }),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.message || "AI prompt test failed");
+    aiTestOutput.textContent = JSON.stringify(result.actions, null, 2);
+  } catch (error) {
+    aiTestOutput.textContent = error.message || "AI prompt test failed";
+  } finally {
+    aiTestBtn.disabled = false;
   }
 }
 
@@ -714,6 +765,7 @@ referenceVideoInput.addEventListener("change", () => {
 });
 
 referenceGenerateBtn.addEventListener("click", generateReferenceEdit);
+aiTestBtn?.addEventListener("click", testAiBrain);
 
 window.addEventListener("popstate", () => {
   showPage(pageRoutes[location.pathname] || "dashboard", { push: false, instant: true });
@@ -722,3 +774,4 @@ window.addEventListener("popstate", () => {
 resetNewProject({ scrollToEditor: false, navigateToEditor: false });
 showPage(pageRoutes[location.pathname] || "dashboard", { push: false, instant: true });
 checkBackendHealth();
+refreshAiSettings();

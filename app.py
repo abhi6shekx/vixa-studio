@@ -3,18 +3,26 @@ import subprocess
 import uuid
 
 try:
+    from dotenv import load_dotenv
+except ImportError:
+    load_dotenv = None
+
+try:
     import cv2
 except ImportError:
     cv2 = None
 from flask import Flask, jsonify, request, send_from_directory
 from werkzeug.utils import secure_filename
 
-from ai_engine import ai_health
+from ai_engine import ai_health, understand_prompt
 from editor import process_video
 from media_tools import ffmpeg_executable, has_ffmpeg
 
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+if load_dotenv:
+    load_dotenv(os.path.join(BASE_DIR, ".env"))
+
 RUNTIME_DIR = "/tmp" if os.environ.get("VERCEL") else BASE_DIR
 UPLOAD_DIR = os.path.join(RUNTIME_DIR, "uploads")
 OUTPUT_DIR = os.path.join(RUNTIME_DIR, "outputs")
@@ -407,6 +415,36 @@ def health():
         "scene_ai": ai["scene_ai"],
         "silence_ai": ai["silence_ai"],
         "runtime": "vercel" if os.environ.get("VERCEL") else "local",
+    })
+
+
+@app.get("/api/ai/status")
+def ai_status():
+    ai = ai_health()
+    return jsonify({
+        "status": "ok",
+        "provider": "openai" if ai["openai"] else "local",
+        "model": os.environ.get("OPENAI_MODEL", "gpt-4o-mini"),
+        "openai": ai["openai"],
+        "whisper": ai["whisper"],
+        "scene_ai": ai["scene_ai"],
+        "silence_ai": ai["silence_ai"],
+        "ffmpeg": _has_ffmpeg(),
+    })
+
+
+@app.post("/api/ai/prompt")
+def ai_prompt_preview():
+    data = request.get_json(silent=True) or {}
+    prompt = data.get("prompt", "")
+    if not prompt.strip():
+        return jsonify({"status": "error", "message": "Prompt is required."}), 400
+
+    actions = understand_prompt(prompt)
+    return jsonify({
+        "status": "ok",
+        "actions": actions,
+        "provider": actions.get("source", "local-ai-parser"),
     })
 
 

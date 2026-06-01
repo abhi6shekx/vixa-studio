@@ -271,6 +271,52 @@ textarea {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.ai-setup-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 18px;
+}
+
+.ai-setup-grid h4 {
+  margin-bottom: 14px;
+}
+
+.ai-status-list {
+  display: grid;
+  gap: 10px;
+}
+
+.ai-status-list p {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.ai-status-list span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.ai-test-output {
+  min-height: 190px;
+  margin-top: 14px;
+  padding: 14px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.26);
+  color: #dffdf7;
+  font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  white-space: pre-wrap;
+}
+
 .topbar {
   min-height: 56px;
   display: flex;
@@ -1593,6 +1639,7 @@ video {
   .quick-actions,
   .analysis-grid,
   .ai-intelligence-grid,
+  .ai-setup-grid,
   .selector-row,
   .tool-grid {
     grid-template-columns: 1fr;

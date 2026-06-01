@@ -457,7 +457,33 @@
             <button class="primary generate" type="button">Generate Voiceover</button>
           </section>
 
-          <section class="panel page-panel" data-page-section data-page="music analytics settings">
+          <section class="panel page-panel" data-page-section data-page="settings">
+            <div class="section-title stacked">
+              <span>Real AI Setup</span>
+              <h3>Connect OpenAI Brain</h3>
+              <p>Backend reads your API key from environment variables. Use this page to verify and test the AI brain.</p>
+            </div>
+            <div class="ai-setup-grid">
+              <div>
+                <h4>AI Provider Status</h4>
+                <div class="ai-status-list">
+                  <p><span>Provider</span><strong id="settingsAiProvider">Checking...</strong></p>
+                  <p><span>Model</span><strong id="settingsAiModel">--</strong></p>
+                  <p><span>OpenAI</span><strong id="settingsOpenAi">--</strong></p>
+                  <p><span>Whisper</span><strong id="settingsWhisper">--</strong></p>
+                  <p><span>Scene AI</span><strong id="settingsSceneAi">--</strong></p>
+                </div>
+              </div>
+              <div>
+                <h4>Test Prompt AI</h4>
+                <textarea id="aiTestPrompt" rows="5">Make this a cinematic reel with bold captions, remove silence, and find highlights.</textarea>
+                <button id="aiTestBtn" class="primary generate" type="button">Test AI Brain</button>
+                <pre id="aiTestOutput" class="ai-test-output">AI actions will appear here.</pre>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel page-panel" data-page-section data-page="music analytics">
             <div class="section-title stacked">
               <span>Studio Tools</span>
               <h3>Coming next</h3>
