@@ -175,8 +175,9 @@ async function checkBackendHealth() {
     const health = await response.json();
     if (!response.ok || health.status !== "ok") throw new Error("AI engine offline");
     backendStatus.className = "backend-status";
-    backendStatus.querySelector("strong").textContent = health.ffmpeg ? "AI Engine Online" : "Plan Mode Only";
-    statusText.textContent = health.ffmpeg ? "AI engine connected. Upload a video to start." : "Backend connected, but FFmpeg is missing.";
+    const aiLabel = health.openai ? "OpenAI" : health.whisper ? "Whisper" : "Local AI";
+    backendStatus.querySelector("strong").textContent = health.ffmpeg ? `${aiLabel} Engine Online` : "Plan Mode Only";
+    statusText.textContent = health.ffmpeg ? `${aiLabel} engine connected. Upload a video to start.` : "Backend connected, but FFmpeg is missing.";
   } catch (error) {
     backendStatus.className = "backend-status offline";
     backendStatus.querySelector("strong").textContent = "Backend Offline";
@@ -427,16 +428,18 @@ async function generateReferenceEdit() {
 function applyServerPlan(serverPlan) {
   if (!serverPlan) return;
   editPlan = serverPlan.cuts || editPlan;
-  captions = serverPlan.captions
-    ? editPlan
-        .filter((clip) => clip.type === "keep")
-        .slice(0, 4)
-        .map((clip, index) => ({
-          start: clip.start,
-          end: clip.end,
-          text: ["Strong hook", "Key moment", "Main takeaway", "Final beat"][index] || "AI caption",
-        }))
-    : [];
+  captions = Array.isArray(serverPlan.caption_items) && serverPlan.caption_items.length
+    ? serverPlan.caption_items
+    : serverPlan.captions
+      ? editPlan
+          .filter((clip) => clip.type === "keep")
+          .slice(0, 4)
+          .map((clip, index) => ({
+            start: clip.start,
+            end: clip.end,
+            text: ["Strong hook", "Key moment", "Main takeaway", "Final beat"][index] || "AI caption",
+          }))
+      : [];
 }
 
 async function generatePlan() {

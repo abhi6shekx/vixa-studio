@@ -9,6 +9,7 @@ except ImportError:
 from flask import Flask, jsonify, request, send_from_directory
 from werkzeug.utils import secure_filename
 
+from ai_engine import ai_health
 from editor import process_video
 from media_tools import ffmpeg_executable, has_ffmpeg
 
@@ -382,10 +383,13 @@ def api_photo_to_video():
 
 @app.get("/health")
 def health():
+    ai = ai_health()
     return jsonify({
         "status": "ok",
         "ffmpeg": _has_ffmpeg(),
         "opencv": cv2 is not None,
+        "openai": ai["openai"],
+        "whisper": ai["whisper"],
         "runtime": "vercel" if os.environ.get("VERCEL") else "local",
     })
 

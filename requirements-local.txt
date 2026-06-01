@@ -3,3 +3,4 @@ opencv-python
 moviepy
 openai-whisper
 torch
+openai
