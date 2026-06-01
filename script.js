@@ -7,6 +7,7 @@ const generateBtn = document.querySelector("#generateBtn");
 const topGenerateBtn = document.querySelector("#topGenerateBtn");
 const exportBtn = document.querySelector("#exportBtn");
 const applyBtn = document.querySelector("#applyBtn");
+const backendStatus = document.querySelector("#backendStatus");
 const promptInput = document.querySelector("#prompt");
 const stage = document.querySelector("#stage");
 const downloadLink = document.querySelector("#downloadLink");
@@ -155,11 +156,32 @@ function updateCaptionOverlay() {
 }
 
 function setGenerateLoading(isLoading) {
-  generateBtn.disabled = isLoading;
+  generateBtn.disabled = isLoading || !selectedFile;
   topGenerateBtn.disabled = isLoading;
   generateBtn.classList.toggle("is-loading", isLoading);
   if (buttonLabel) buttonLabel.textContent = isLoading ? "Generating" : "Generate Video";
   topGenerateBtn.textContent = isLoading ? "Generating..." : "Start New Project";
+}
+
+function updateGenerateAvailability() {
+  generateBtn.disabled = !selectedFile;
+  generateBtn.title = selectedFile ? "Render this video with the AI engine" : "Upload a video first";
+}
+
+async function checkBackendHealth() {
+  if (!backendStatus) return;
+  try {
+    const response = await fetch("/health");
+    const health = await response.json();
+    if (!response.ok || health.status !== "ok") throw new Error("AI engine offline");
+    backendStatus.className = "backend-status";
+    backendStatus.querySelector("strong").textContent = health.ffmpeg ? "AI Engine Online" : "Plan Mode Only";
+    statusText.textContent = health.ffmpeg ? "AI engine connected. Upload a video to start." : "Backend connected, but FFmpeg is missing.";
+  } catch (error) {
+    backendStatus.className = "backend-status offline";
+    backendStatus.querySelector("strong").textContent = "Backend Offline";
+    statusText.textContent = "Backend is not connected. Run python3 app.py and open http://127.0.0.1:5050";
+  }
 }
 
 function setPhotoLoading(isLoading) {
@@ -281,6 +303,7 @@ function resetNewProject(options = {}) {
   cutsMetric.textContent = editPlan.filter((clip) => clip.type === "cut").length;
   durationMetric.textContent = "--";
   planSummary.textContent = "New project created";
+  updateGenerateAvailability();
 
   document.querySelectorAll(".nav-item").forEach((item) => item.classList.remove("active"));
   document.querySelector('[data-scroll="videoEditor"]')?.classList.add("active");
@@ -417,12 +440,20 @@ function applyServerPlan(serverPlan) {
 }
 
 async function generatePlan() {
+  if (!selectedFile) {
+    statusText.textContent = "Upload a video first. This is a real renderer, not a slideshow demo.";
+    captionOverlay.textContent = "Choose a video file, then click Generate Video";
+    videoInput.focus();
+    updateGenerateAvailability();
+    return;
+  }
+
   const prompt = promptInput.value.trim();
   const styledPrompt = `${prompt} ${selectedStyle}`.trim();
   setGenerateLoading(true);
-  statusText.textContent = selectedFile ? "Uploading video to AI engine..." : "Generating browser preview plan...";
+  statusText.textContent = "Uploading video to AI engine...";
 
-  if (selectedFile && location.protocol !== "file:") {
+  if (location.protocol !== "file:") {
     const formData = new FormData();
     formData.append("video", selectedFile);
     formData.append("prompt", styledPrompt);
@@ -443,7 +474,7 @@ async function generatePlan() {
   } else {
     editPlan = makePlan(video.duration);
     captions = makeCaptions(editPlan, styledPrompt);
-    statusText.textContent = "Browser preview plan generated";
+    statusText.textContent = "Open http://127.0.0.1:5050 to render with the backend.";
   }
 
   renderTimeline();
@@ -457,12 +488,14 @@ async function generatePlan() {
   planSummary.textContent = `${cuts} cuts, ${captions.length} captions, ${formatTime(keptSeconds)} output`;
   updateCaptionOverlay();
   setGenerateLoading(false);
+  updateGenerateAvailability();
 }
 
 videoInput.addEventListener("change", () => {
   const file = videoInput.files?.[0];
   if (!file) return;
   selectedFile = file;
+  updateGenerateAvailability();
   video.src = URL.createObjectURL(file);
   projectName.textContent = file.name;
   statusText.textContent = "Video loaded";
@@ -480,6 +513,11 @@ topGenerateBtn.addEventListener("click", resetNewProject);
 newProjectBtn.addEventListener("click", resetNewProject);
 
 applyBtn.addEventListener("click", () => {
+  if (!selectedFile && !editPlan.length) {
+    statusText.textContent = "Upload and generate a real edit before applying controls.";
+    videoInput.focus();
+    return;
+  }
   if (!editPlan.length) generatePlan();
   stage.classList.toggle("ai-focus", zoomToggle.checked);
   statusText.textContent = silenceToggle.checked ? "Plan applied: silence sections marked for removal" : "Plan applied";
@@ -487,7 +525,11 @@ applyBtn.addEventListener("click", () => {
 });
 
 exportBtn.addEventListener("click", () => {
-  if (!editPlan.length) generatePlan();
+  if (!editPlan.length) {
+    statusText.textContent = "Generate a real edit first, then export the edit plan.";
+    videoInput.focus();
+    return;
+  }
   const exported = {
     prompt: promptInput.value,
     style: selectedStyle,
@@ -617,3 +659,4 @@ referenceVideoInput.addEventListener("change", () => {
 referenceGenerateBtn.addEventListener("click", generateReferenceEdit);
 
 resetNewProject({ scrollToEditor: false });
+checkBackendHealth();
