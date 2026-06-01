@@ -2,7 +2,17 @@ import os
 import subprocess
 import uuid
 
-from ai_engine import fallback_captions, ffprobe_duration, has_audio_stream, transcribe_video, understand_prompt, write_ass_captions
+from ai_engine import (
+    analyze_scenes,
+    build_ai_edit_plan,
+    detect_silence,
+    fallback_captions,
+    ffprobe_duration,
+    has_audio_stream,
+    transcribe_video,
+    understand_prompt,
+    write_ass_captions,
+)
 from media_tools import ffmpeg_executable
 from prompt_ai import parse_prompt
 
@@ -143,31 +153,13 @@ def _burn_captions_cv2(video_path, captions, ffmpeg):
     return final_video, True
 
 
-def _plan_from_settings(settings, prompt, actions, captions=None, duration=30):
-    cuts = [
-        {"label": "Hook", "start": 0, "end": 4, "type": "keep"},
-        {"label": "Pause cleanup", "start": 4, "end": 6, "type": "cut" if settings["silence"] else "keep"},
-        {"label": "Main point", "start": 6, "end": min(18, duration * 0.62), "type": "keep"},
-        {"label": "Slow section", "start": min(18, duration * 0.62), "end": min(22, duration * 0.76), "type": "cut" if settings["silence"] else "keep"},
-        {"label": "Final beat", "start": min(22, duration * 0.76), "end": duration, "type": "keep"},
-    ]
-    return {
-        "prompt": prompt,
-        "style": actions["style"],
-        "aspect_ratio": actions["aspect_ratio"],
-        "captions": bool(captions),
-        "caption_items": captions or [],
-        "music": actions["background_music"],
-        "ai_actions": actions,
-        "cuts": cuts,
-    }
-
-
 def process_video(video_path, prompt):
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     settings = parse_prompt(prompt)
     actions = understand_prompt(prompt)
     duration = ffprobe_duration(video_path)
+    scene_analysis = analyze_scenes(video_path)
+    silence_segments = detect_silence(video_path) if actions["remove_silence"] else []
     captions = []
     caption_source = None
     caption_path = None
@@ -184,7 +176,7 @@ def process_video(video_path, prompt):
         width, height = (1080, 1920) if actions["aspect_ratio"] == "9:16" or settings["reel"] else (1280, 720)
         write_ass_captions(captions, caption_path, width=width, height=height)
 
-    plan = _plan_from_settings(settings, prompt, actions, captions=captions, duration=duration)
+    plan = build_ai_edit_plan(prompt, actions, duration, scene_analysis, silence_segments, captions)
 
     ffmpeg = ffmpeg_executable()
     if not ffmpeg:
@@ -243,6 +235,10 @@ def process_video(video_path, prompt):
             "caption_source": caption_source,
             "captions_generated": len(captions),
             "captions_burned": caption_burned,
+            "scene_source": scene_analysis.get("source"),
+            "scene_count": scene_analysis.get("scene_count"),
+            "highlights": scene_analysis.get("highlights", []),
+            "silence_segments": len(silence_segments),
         },
         "output_url": f"/outputs/{output_name}",
     }

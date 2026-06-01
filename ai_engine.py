@@ -7,6 +7,11 @@ from functools import lru_cache
 from media_tools import ffmpeg_executable
 from prompt_ai import parse_prompt
 
+try:
+    import cv2
+except ImportError:
+    cv2 = None
+
 
 def _bool(value):
     return bool(value) if value is not None else False
@@ -211,10 +216,167 @@ def fallback_captions(duration, prompt):
     ]
 
 
+def detect_silence(video_path):
+    ffmpeg = ffmpeg_executable()
+    if not ffmpeg or not has_audio_stream(video_path):
+        return []
+
+    result = subprocess.run(
+        [
+            ffmpeg,
+            "-hide_banner",
+            "-i",
+            video_path,
+            "-af",
+            "silencedetect=noise=-34dB:d=0.45",
+            "-f",
+            "null",
+            "-",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    text = result.stderr
+    starts = [float(match) for match in re.findall(r"silence_start: ([0-9.]+)", text)]
+    ends = [float(match) for match in re.findall(r"silence_end: ([0-9.]+)", text)]
+    return [
+        {"start": start, "end": end, "type": "silence"}
+        for start, end in zip(starts, ends)
+        if end - start >= 0.45
+    ][:30]
+
+
+def analyze_scenes(video_path):
+    duration = ffprobe_duration(video_path)
+    if cv2 is None:
+        return {
+            "source": "fallback",
+            "duration": duration,
+            "scene_count": 1,
+            "cuts": [],
+            "highlights": [{"start": 0, "end": min(duration, 8), "score": 0.5, "label": "Opening highlight"}],
+            "brightness": None,
+            "motion": None,
+        }
+
+    cap = cv2.VideoCapture(video_path)
+    fps = cap.get(cv2.CAP_PROP_FPS) or 24
+    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+    sample_step = max(1, int(fps * 0.5))
+    last_hist = None
+    cuts = []
+    highlights = []
+    brightness_values = []
+    motion_values = []
+    previous_gray = None
+    frame_index = 0
+
+    while True:
+        ok, frame = cap.read()
+        if not ok:
+            break
+        if frame_index % sample_step:
+            frame_index += 1
+            continue
+
+        seconds = frame_index / fps
+        resized = cv2.resize(frame, (160, 90))
+        hsv = cv2.cvtColor(resized, cv2.COLOR_BGR2HSV)
+        gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
+        brightness = float(hsv[:, :, 2].mean())
+        saturation = float(hsv[:, :, 1].mean())
+        brightness_values.append(brightness)
+
+        hist = cv2.calcHist([hsv], [0], None, [32], [0, 180])
+        cv2.normalize(hist, hist)
+        cut_score = 0.0
+        if last_hist is not None:
+            cut_score = float(cv2.compareHist(last_hist, hist, cv2.HISTCMP_BHATTACHARYYA))
+            if cut_score > 0.48:
+                cuts.append({"time": round(seconds, 2), "score": round(cut_score, 3)})
+        last_hist = hist
+
+        motion = 0.0
+        if previous_gray is not None:
+            motion = float(cv2.absdiff(previous_gray, gray).mean())
+            motion_values.append(motion)
+        previous_gray = gray
+
+        score = (motion / 40) + (saturation / 220) + min(cut_score, 0.8)
+        if score > 0.42:
+            highlights.append({
+                "start": round(max(0, seconds - 1.2), 2),
+                "end": round(min(duration, seconds + 2.8), 2),
+                "score": round(score, 3),
+                "label": "High motion moment" if motion > 10 else "Visual change",
+            })
+        frame_index += 1
+
+    cap.release()
+    highlights = sorted(highlights, key=lambda item: item["score"], reverse=True)[:8]
+    highlights = sorted(highlights, key=lambda item: item["start"])
+    return {
+        "source": "opencv",
+        "duration": round(duration, 2),
+        "scene_count": max(1, len(cuts) + 1),
+        "cuts": cuts[:30],
+        "highlights": highlights or [{"start": 0, "end": min(duration, 8), "score": 0.5, "label": "Opening highlight"}],
+        "brightness": round(sum(brightness_values) / len(brightness_values), 2) if brightness_values else None,
+        "motion": round(sum(motion_values) / len(motion_values), 2) if motion_values else None,
+        "frames": frame_count,
+    }
+
+
+def build_ai_edit_plan(prompt, actions, duration, scene_analysis, silence_segments, captions):
+    clips = []
+    if actions["remove_silence"] and silence_segments:
+        cursor = 0.0
+        for segment in silence_segments[:12]:
+            if segment["start"] > cursor:
+                clips.append({"label": "Keep", "start": round(cursor, 2), "end": round(segment["start"], 2), "type": "keep"})
+            clips.append({"label": "AI silence cut", "start": round(segment["start"], 2), "end": round(segment["end"], 2), "type": "cut"})
+            cursor = max(cursor, segment["end"])
+        if cursor < duration:
+            clips.append({"label": "Keep", "start": round(cursor, 2), "end": round(duration, 2), "type": "keep"})
+    else:
+        highlights = scene_analysis.get("highlights", [])
+        if actions["pace"] == "fast" and highlights:
+            clips = [
+                {"label": item["label"], "start": item["start"], "end": item["end"], "type": "keep"}
+                for item in highlights[:6]
+            ]
+        else:
+            clips = [
+                {"label": "AI hook", "start": 0, "end": min(4, duration), "type": "keep"},
+                {"label": "Scene intelligence", "start": min(4, duration), "end": min(max(10, duration * 0.5), duration), "type": "keep"},
+                {"label": "Best moment", "start": max(0, duration * 0.5), "end": duration, "type": "keep"},
+            ]
+
+    clips = [clip for clip in clips if clip["end"] > clip["start"]]
+    return {
+        "prompt": prompt,
+        "style": actions["style"],
+        "aspect_ratio": actions["aspect_ratio"],
+        "captions": bool(captions),
+        "caption_items": captions or [],
+        "music": actions["background_music"],
+        "ai_actions": actions,
+        "ai_analysis": {
+            "scene": scene_analysis,
+            "silence": silence_segments,
+        },
+        "cuts": clips,
+    }
+
+
 def ai_health():
     return {
         "openai": bool(os.environ.get("OPENAI_API_KEY")),
         "whisper": _module_available("whisper"),
+        "opencv": cv2 is not None,
+        "scene_ai": cv2 is not None,
+        "silence_ai": ffmpeg_executable() is not None,
     }
 
 

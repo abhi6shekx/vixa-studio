@@ -946,7 +946,14 @@ textarea {
   gap: 10px;
 }
 
-.analysis-grid div {
+.ai-intelligence-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.analysis-grid div,
+.ai-intelligence-grid div {
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -954,22 +961,31 @@ textarea {
 }
 
 .analysis-grid span,
-.analysis-grid strong {
+.analysis-grid strong,
+.ai-intelligence-grid span,
+.ai-intelligence-grid strong {
   display: block;
 }
 
-.analysis-grid span {
+.analysis-grid span,
+.ai-intelligence-grid span {
   color: var(--muted);
   font-size: 11px;
   font-weight: 900;
   text-transform: uppercase;
 }
 
-.analysis-grid strong {
+.analysis-grid strong,
+.ai-intelligence-grid strong {
   margin-top: 5px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.ai-intelligence-grid strong {
+  color: #fff;
+  font-size: 15px;
 }
 
 .preview-workspace {
@@ -1564,6 +1580,7 @@ video {
   .overview-grid,
   .quick-actions,
   .analysis-grid,
+  .ai-intelligence-grid,
   .selector-row,
   .tool-grid {
     grid-template-columns: 1fr;

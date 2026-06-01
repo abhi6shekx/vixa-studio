@@ -390,6 +390,8 @@ def health():
         "opencv": cv2 is not None,
         "openai": ai["openai"],
         "whisper": ai["whisper"],
+        "scene_ai": ai["scene_ai"],
+        "silence_ai": ai["silence_ai"],
         "runtime": "vercel" if os.environ.get("VERCEL") else "local",
     })
 

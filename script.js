@@ -50,6 +50,11 @@ const analysisCaptions = document.querySelector("#analysisCaptions");
 const analysisRatio = document.querySelector("#analysisRatio");
 const analysisBeat = document.querySelector("#analysisBeat");
 const analysisZoom = document.querySelector("#analysisZoom");
+const aiSummary = document.querySelector("#aiSummary");
+const aiPromptSource = document.querySelector("#aiPromptSource");
+const aiSceneCount = document.querySelector("#aiSceneCount");
+const aiCaptionCount = document.querySelector("#aiCaptionCount");
+const aiSilenceCount = document.querySelector("#aiSilenceCount");
 
 let editPlan = [];
 let captions = [];
@@ -305,6 +310,7 @@ function resetNewProject(options = {}) {
   durationMetric.textContent = "--";
   planSummary.textContent = "New project created";
   updateGenerateAvailability();
+  updateAiIntelligence(null);
 
   document.querySelectorAll(".nav-item").forEach((item) => item.classList.remove("active"));
   document.querySelector('[data-scroll="videoEditor"]')?.classList.add("active");
@@ -377,6 +383,22 @@ function updateReferenceAnalysis(analysis) {
   analysisRatio.textContent = analysis?.aspect_ratio || "--";
   analysisBeat.textContent = analysis?.music_beat || "--";
   analysisZoom.textContent = analysis?.zoom_style || "--";
+}
+
+function updateAiIntelligence(result) {
+  const ai = result?.ai;
+  const analysis = result?.plan?.ai_analysis;
+  aiPromptSource.textContent = ai?.actions?.source || "--";
+  aiSceneCount.textContent = ai?.scene_count ? `${ai.scene_count} scenes` : "--";
+  aiCaptionCount.textContent = Number.isFinite(ai?.captions_generated) ? `${ai.captions_generated} captions` : "--";
+  aiSilenceCount.textContent = Number.isFinite(ai?.silence_segments) ? `${ai.silence_segments} cuts` : "--";
+  if (analysis?.scene?.highlights?.length) {
+    aiSummary.textContent = `${analysis.scene.highlights.length} highlight moments found with ${analysis.scene.source} scene AI`;
+  } else if (ai) {
+    aiSummary.textContent = "AI analysis completed";
+  } else {
+    aiSummary.textContent = "Upload and generate to see AI analysis";
+  }
 }
 
 async function generateReferenceEdit() {
@@ -468,6 +490,7 @@ async function generatePlan() {
       if (result.output_url) {
         showRenderedOutput(result, selectedFile.name);
       }
+      updateAiIntelligence(result);
       statusText.textContent = result.message || "AI edit generated";
     } catch (error) {
       editPlan = makePlan(video.duration);
