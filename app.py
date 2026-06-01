@@ -282,6 +282,20 @@ def home():
     return send_from_directory(BASE_DIR, "index.html")
 
 
+@app.get("/editor")
+@app.get("/reference-match")
+@app.get("/photo-to-video")
+@app.get("/templates")
+@app.get("/projects")
+@app.get("/voice")
+@app.get("/subtitles")
+@app.get("/music")
+@app.get("/analytics")
+@app.get("/settings")
+def app_page():
+    return send_from_directory(BASE_DIR, "index.html")
+
+
 @app.post("/edit")
 def edit():
     if "video" not in request.files:

@@ -56,6 +56,22 @@ const aiSceneCount = document.querySelector("#aiSceneCount");
 const aiCaptionCount = document.querySelector("#aiCaptionCount");
 const aiSilenceCount = document.querySelector("#aiSilenceCount");
 
+const pageRoutes = {
+  "/": "dashboard",
+  "/editor": "editor",
+  "/reference-match": "reference",
+  "/photo-to-video": "photo",
+  "/templates": "templates",
+  "/projects": "projects",
+  "/voice": "voice",
+  "/subtitles": "subtitles",
+  "/music": "music",
+  "/analytics": "analytics",
+  "/settings": "settings",
+};
+
+const pagePaths = Object.fromEntries(Object.entries(pageRoutes).map(([path, page]) => [page, path]));
+
 let editPlan = [];
 let captions = [];
 let activeCaptionIndex = 0;
@@ -77,6 +93,30 @@ const photoMotionLabels = {
   anime: "Anime Motion",
   product: "Product Showcase",
 };
+
+function pageMatches(element, page) {
+  return (element.dataset.page || "").split(/\s+/).includes(page);
+}
+
+function showPage(page, options = {}) {
+  const nextPage = pagePaths[page] ? page : "dashboard";
+  document.querySelectorAll("[data-page-section]").forEach((section) => {
+    section.classList.toggle("page-hidden", !pageMatches(section, nextPage));
+  });
+  document.querySelectorAll("[data-page-aside]").forEach((aside) => {
+    aside.classList.toggle("page-hidden", !pageMatches(aside, nextPage));
+  });
+  document.querySelectorAll(".nav-item").forEach((item) => {
+    item.classList.toggle("active", item.dataset.page === nextPage);
+  });
+  document.body.dataset.page = nextPage;
+  if (options.push !== false) {
+    history.pushState({ page: nextPage }, "", pagePaths[nextPage]);
+  }
+  if (options.scroll !== false) {
+    window.scrollTo({ top: 0, behavior: options.instant ? "auto" : "smooth" });
+  }
+}
 
 function formatTime(seconds) {
   if (!Number.isFinite(seconds)) return "--";
@@ -267,7 +307,7 @@ function showRenderedOutput(result, fallbackName = "Vixa AI render") {
 }
 
 function resetNewProject(options = {}) {
-  const { scrollToEditor = true } = options;
+  const { scrollToEditor = true, navigateToEditor = true } = options;
   selectedFile = null;
   editPlan = makePlan(36);
   captions = makeCaptions(editPlan, promptInput.value || "cinematic");
@@ -312,11 +352,8 @@ function resetNewProject(options = {}) {
   updateGenerateAvailability();
   updateAiIntelligence(null);
 
-  document.querySelectorAll(".nav-item").forEach((item) => item.classList.remove("active"));
-  document.querySelector('[data-scroll="videoEditor"]')?.classList.add("active");
-  if (scrollToEditor) {
-    const editorTop = document.querySelector("#videoEditor")?.offsetTop ?? 0;
-    window.scrollTo({ top: Math.max(0, editorTop - 16), behavior: "smooth" });
+  if (navigateToEditor) {
+    showPage("editor", { push: true, scroll: scrollToEditor });
   }
 }
 
@@ -599,6 +636,7 @@ document.querySelectorAll("[data-template]").forEach((button) => {
   button.addEventListener("click", () => {
     promptInput.value = button.dataset.template;
     statusText.textContent = "Template copied into prompt editor";
+    showPage("editor");
     promptInput.focus();
   });
 });
@@ -617,14 +655,7 @@ document.querySelectorAll("[data-tool]").forEach((button) => {
 
 document.querySelectorAll(".nav-item").forEach((button) => {
   button.addEventListener("click", () => {
-    document.querySelectorAll(".nav-item").forEach((item) => item.classList.remove("active"));
-    button.classList.add("active");
-    const target = button.dataset.scroll;
-    if (target === "top") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } else if (target) {
-      document.querySelector(`#${target}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    showPage(button.dataset.page || "dashboard");
   });
 });
 
@@ -684,5 +715,10 @@ referenceVideoInput.addEventListener("change", () => {
 
 referenceGenerateBtn.addEventListener("click", generateReferenceEdit);
 
-resetNewProject({ scrollToEditor: false });
+window.addEventListener("popstate", () => {
+  showPage(pageRoutes[location.pathname] || "dashboard", { push: false, instant: true });
+});
+
+resetNewProject({ scrollToEditor: false, navigateToEditor: false });
+showPage(pageRoutes[location.pathname] || "dashboard", { push: false, instant: true });
 checkBackendHealth();

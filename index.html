@@ -19,17 +19,17 @@
       <button id="newProjectBtn" class="new-project" type="button">+ New Project</button>
 
       <nav class="nav-list" aria-label="Primary navigation">
-        <button class="nav-item active" type="button" data-scroll="top"><span>Dashboard</span></button>
-        <button class="nav-item" type="button" data-scroll="videoEditor"><span>AI Editor</span></button>
-        <button class="nav-item" type="button" data-scroll="referenceMatch"><span>Reference Match</span></button>
-        <button class="nav-item" type="button" data-scroll="photoToVideo"><span>Photo to Video</span></button>
-        <button class="nav-item" type="button"><span>Templates</span></button>
-        <button class="nav-item" type="button"><span>Projects</span></button>
-        <button class="nav-item" type="button"><span>AI Voice (TTS)</span></button>
-        <button class="nav-item" type="button"><span>Subtitles</span></button>
-        <button class="nav-item" type="button"><span>Music</span></button>
-        <button class="nav-item" type="button"><span>Analytics</span></button>
-        <button class="nav-item" type="button"><span>Settings</span></button>
+        <button class="nav-item active" type="button" data-page="dashboard"><span>Dashboard</span></button>
+        <button class="nav-item" type="button" data-page="editor"><span>AI Editor</span></button>
+        <button class="nav-item" type="button" data-page="reference"><span>Reference Match</span></button>
+        <button class="nav-item" type="button" data-page="photo"><span>Photo to Video</span></button>
+        <button class="nav-item" type="button" data-page="templates"><span>Templates</span></button>
+        <button class="nav-item" type="button" data-page="projects"><span>Projects</span></button>
+        <button class="nav-item" type="button" data-page="voice"><span>AI Voice (TTS)</span></button>
+        <button class="nav-item" type="button" data-page="subtitles"><span>Subtitles</span></button>
+        <button class="nav-item" type="button" data-page="music"><span>Music</span></button>
+        <button class="nav-item" type="button" data-page="analytics"><span>Analytics</span></button>
+        <button class="nav-item" type="button" data-page="settings"><span>Settings</span></button>
       </nav>
 
       <section class="upgrade-card">
@@ -72,7 +72,7 @@
 
       <div class="dashboard-layout">
         <section class="dashboard-main">
-          <section class="hero">
+          <section class="hero" data-page-section data-page="dashboard">
             <div class="hero-copy">
               <span>Create. Edit. Inspire.</span>
               <h2>AI Video Studio</h2>
@@ -90,7 +90,7 @@
             <button class="play-button" type="button" aria-label="Preview Vixa Studio">▶</button>
           </section>
 
-          <section class="steps-panel">
+          <section class="steps-panel" data-page-section data-page="dashboard">
             <div class="section-title">
               <h3>Create with AI in 3 Simple Steps</h3>
               <span>Hide</span>
@@ -126,7 +126,7 @@
             </div>
           </section>
 
-          <section class="content-row">
+          <section class="content-row" data-page-section data-page="dashboard">
             <article class="panel">
               <div class="section-title">
                 <h3>Popular Templates</h3>
@@ -154,7 +154,7 @@
             </article>
           </section>
 
-          <section class="content-row overview-row">
+          <section class="content-row overview-row" data-page-section data-page="dashboard">
             <article class="panel overview-panel">
               <h3>Your Studio Overview</h3>
               <div class="overview-grid">
@@ -174,7 +174,7 @@
             </article>
           </section>
 
-          <section id="referenceMatch" class="reference-editor panel">
+          <section id="referenceMatch" class="reference-editor panel" data-page-section data-page="reference">
             <div class="section-title stacked">
               <span>Copy Style from Reference</span>
               <h3>Reference Match AI</h3>
@@ -228,7 +228,7 @@
             </div>
           </section>
 
-          <section id="videoEditor" class="editor panel">
+          <section id="videoEditor" class="editor panel" data-page-section data-page="editor">
             <div class="section-title stacked">
               <span>Create with AI</span>
               <h3>Video Editor</h3>
@@ -264,7 +264,7 @@
             </button>
           </section>
 
-          <section class="preview-workspace">
+          <section class="preview-workspace" data-page-section data-page="editor">
             <article class="panel preview-panel">
               <div class="section-title">
                 <div>
@@ -307,7 +307,7 @@
             </article>
           </section>
 
-          <section class="timeline-panel panel">
+          <section class="timeline-panel panel" data-page-section data-page="editor">
             <div class="section-title">
               <div>
                 <h3>AI edit plan</h3>
@@ -321,7 +321,7 @@
             <div id="timeline" class="timeline"></div>
           </section>
 
-          <section class="panel ai-intelligence-panel">
+          <section class="panel ai-intelligence-panel" data-page-section data-page="editor">
             <div class="section-title">
               <div>
                 <h3>AI Intelligence</h3>
@@ -336,7 +336,7 @@
             </div>
           </section>
 
-          <section id="photoToVideo" class="photo-video-panel panel">
+          <section id="photoToVideo" class="photo-video-panel panel" data-page-section data-page="photo">
             <div class="section-title stacked">
               <span>Photo to Video AI</span>
               <h3>Animate still images into cinematic AI videos</h3>
@@ -414,13 +414,59 @@
             </div>
           </section>
 
-          <section class="panel captions-panel">
+          <section class="panel captions-panel" data-page-section data-page="subtitles editor">
             <h3>Captions</h3>
             <div id="captionsList" class="captions-list"></div>
           </section>
+
+          <section class="panel page-panel" data-page-section data-page="templates">
+            <div class="section-title stacked">
+              <span>Template Library</span>
+              <h3>AI editing templates</h3>
+              <p>Pick a preset and jump into the editor with a ready prompt.</p>
+            </div>
+            <div class="template-strip expanded-strip">
+              <button class="template-tile tile-cinematic" type="button" data-template="Make this a cinematic product teaser with premium captions."><span></span><strong>Cinematic Product</strong><small>16:9</small></button>
+              <button class="template-tile tile-dramatic" type="button" data-template="Make this dramatic with moody color and slow push-in."><span></span><strong>Dramatic Story</strong><small>16:9</small></button>
+              <button class="template-tile tile-reel" type="button" data-template="Create a viral short with fast pacing, bold captions, and a strong hook."><span></span><strong>Viral Short</strong><small>9:16</small></button>
+              <button class="template-tile tile-anime" type="button" data-template="Turn this into an anime-inspired highlight reel with dramatic color and movement."><span></span><strong>Anime Highlight</strong><small>16:9</small></button>
+            </div>
+          </section>
+
+          <section class="panel page-panel" data-page-section data-page="projects">
+            <div class="section-title stacked">
+              <span>Projects</span>
+              <h3>Your recent video renders</h3>
+              <p>Rendered outputs and active edits will appear here.</p>
+            </div>
+            <div class="project-strip expanded-strip">
+              <article class="project-tile tile-dramatic"><span>00:45</span><strong>Cinematic Reel</strong><small>1080p render</small></article>
+              <article class="project-tile tile-anime"><span>00:30</span><strong>Anime Edit</strong><small>Draft</small></article>
+              <article class="project-tile tile-cinematic"><span>01:20</span><strong>Travel Vlog</strong><small>4K render</small></article>
+              <article class="project-tile tile-reel"><span>00:28</span><strong>Motivation Short</strong><small>Ready</small></article>
+            </div>
+          </section>
+
+          <section class="panel page-panel" data-page-section data-page="voice">
+            <div class="section-title stacked">
+              <span>AI Voice</span>
+              <h3>Text to speech narration</h3>
+              <p>Write narration and generate voiceover tracks for your edit.</p>
+            </div>
+            <textarea rows="6" placeholder="Write your voiceover script..."></textarea>
+            <button class="primary generate" type="button">Generate Voiceover</button>
+          </section>
+
+          <section class="panel page-panel" data-page-section data-page="music analytics settings">
+            <div class="section-title stacked">
+              <span>Studio Tools</span>
+              <h3>Coming next</h3>
+              <p>This page is separated now and ready for dedicated AI tools.</p>
+            </div>
+          </section>
         </section>
 
-        <aside class="quick-column">
+        <aside class="quick-column" data-page-aside="dashboard">
           <section class="panel quick-actions">
             <h3>Quick Actions</h3>
             <button type="button" data-tool="captions"><strong>Auto Subtitle</strong><span>Generate subtitles for video</span></button>

@@ -259,6 +259,18 @@ textarea {
   padding: 18px 22px 36px;
 }
 
+.page-hidden {
+  display: none !important;
+}
+
+.page-panel {
+  min-height: 520px;
+}
+
+.expanded-strip {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .topbar {
   min-height: 56px;
   display: flex;
