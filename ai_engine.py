@@ -35,6 +35,9 @@ def _fallback_actions(prompt):
 
 
 def understand_prompt(prompt):
+    if os.environ.get("USE_OPENAI", "false").lower() not in {"1", "true", "yes", "on"}:
+        return _fallback_actions(prompt)
+
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
         return _fallback_actions(prompt)
@@ -371,8 +374,11 @@ def build_ai_edit_plan(prompt, actions, duration, scene_analysis, silence_segmen
 
 
 def ai_health():
+    use_openai = os.environ.get("USE_OPENAI", "false").lower() in {"1", "true", "yes", "on"}
     return {
-        "openai": bool(os.environ.get("OPENAI_API_KEY")),
+        "openai": bool(os.environ.get("OPENAI_API_KEY")) and use_openai,
+        "openai_configured": bool(os.environ.get("OPENAI_API_KEY")),
+        "use_openai": use_openai,
         "whisper": _module_available("whisper"),
         "opencv": cv2 is not None,
         "scene_ai": cv2 is not None,
