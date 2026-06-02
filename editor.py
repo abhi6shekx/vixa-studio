@@ -27,8 +27,17 @@ RUNTIME_DIR = "/tmp" if os.environ.get("VERCEL") else BASE_DIR
 OUTPUT_DIR = os.environ.get("VIXA_OUTPUT_DIR", os.path.join(RUNTIME_DIR, "outputs"))
 
 
+def _target_dimensions(settings, actions):
+    if actions["aspect_ratio"] == "9:16" or settings["reel"]:
+        return 1080, 1920
+    if actions["aspect_ratio"] == "1:1":
+        return 1080, 1080
+    return 1280, 720
+
+
 def _build_filters(settings, actions):
     filters = []
+    target_width, target_height = _target_dimensions(settings, actions)
 
     if actions["aspect_ratio"] == "9:16" or settings["reel"]:
         filters.append("scale=1080:1920:force_original_aspect_ratio=increase")
@@ -47,7 +56,70 @@ def _build_filters(settings, actions):
         filters.append("eq=contrast=1.34:saturation=0.86")
     if settings["anime"] or "anime" in grade:
         filters.append("eq=saturation=1.45:contrast=1.2")
+    if actions.get("zoom_style") and actions.get("zoom_style") != "none":
+        filters.append("crop=iw*0.94:ih*0.94:(iw-iw*0.94)/2:(ih-ih*0.94)/2")
+        filters.append(f"scale={target_width}:{target_height}")
     return ",".join(filters)
+
+
+def _keep_ranges_from_silence(duration, silence_segments):
+    ranges = []
+    cursor = 0.0
+    for segment in silence_segments:
+        start = max(0.0, float(segment.get("start", 0)))
+        end = min(duration, float(segment.get("end", 0)))
+        if start > cursor + 0.08:
+            ranges.append((round(cursor, 3), round(start, 3)))
+        cursor = max(cursor, end)
+    if cursor < duration - 0.08:
+        ranges.append((round(cursor, 3), round(duration, 3)))
+    return [(start, end) for start, end in ranges if end > start]
+
+
+def _remove_silence_render(video_path, duration, silence_segments, ffmpeg):
+    keep_ranges = _keep_ranges_from_silence(duration, silence_segments)
+    if not keep_ranges or len(keep_ranges) > 24:
+        return video_path, False
+
+    output_path = os.path.join(OUTPUT_DIR, f"silence_cut_{uuid.uuid4().hex[:10]}.mp4")
+    filters = []
+    concat_inputs = []
+    for index, (start, end) in enumerate(keep_ranges):
+        filters.append(f"[0:v]trim=start={start}:end={end},setpts=PTS-STARTPTS[v{index}]")
+        filters.append(f"[0:a]atrim=start={start}:end={end},asetpts=PTS-STARTPTS[a{index}]")
+        concat_inputs.append(f"[v{index}][a{index}]")
+    filters.append(f"{''.join(concat_inputs)}concat=n={len(keep_ranges)}:v=1:a=1[outv][outa]")
+
+    result = subprocess.run(
+        [
+            ffmpeg,
+            "-y",
+            "-i",
+            video_path,
+            "-filter_complex",
+            ";".join(filters),
+            "-map",
+            "[outv]",
+            "-map",
+            "[outa]",
+            "-c:v",
+            "libx264",
+            "-preset",
+            "veryfast",
+            "-crf",
+            "23",
+            "-c:a",
+            "aac",
+            "-b:a",
+            "128k",
+            output_path,
+        ],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        return video_path, False
+    return output_path, True
 
 
 def _caption_for_time(captions, seconds):
@@ -164,8 +236,8 @@ def process_video(video_path, prompt, user_options=None):
         actions["remove_silence"] = bool(user_options["remove_silence"])
     if "background_music" in user_options:
         actions["background_music"] = bool(user_options["background_music"])
-    if "auto_zoom" in user_options and not user_options["auto_zoom"]:
-        actions["zoom_style"] = "none"
+    if "auto_zoom" in user_options:
+        actions["zoom_style"] = "slow push-in" if user_options["auto_zoom"] else "none"
     duration = ffprobe_duration(video_path)
     scene_analysis = analyze_scenes(video_path)
     silence_segments = detect_silence(video_path) if actions["remove_silence"] else []
@@ -230,14 +302,27 @@ def process_video(video_path, prompt, user_options=None):
             "output_url": None,
         }
 
+    silence_removed = False
+    if silence_segments:
+        output_path, silence_removed = _remove_silence_render(output_path, duration, silence_segments, ffmpeg)
+        output_name = os.path.basename(output_path)
+
     caption_burned = False
     if captions:
         output_path, caption_burned = _burn_captions_cv2(output_path, captions, ffmpeg)
         output_name = os.path.basename(output_path)
 
+    enabled_tools = []
+    if actions.get("zoom_style") != "none":
+        enabled_tools.append("auto zoom")
+    if silence_removed:
+        enabled_tools.append("silence removal")
+    if captions:
+        enabled_tools.append("captions")
+
     return {
         "status": "rendered",
-        "message": "AI edit rendered with prompt understanding and captions." if captions else "AI edit rendered with prompt understanding.",
+        "message": f"AI edit rendered with {', '.join(enabled_tools)}." if enabled_tools else "AI edit rendered.",
         "plan": plan,
         "ai": {
             "actions": actions,
@@ -248,6 +333,8 @@ def process_video(video_path, prompt, user_options=None):
             "scene_count": scene_analysis.get("scene_count"),
             "highlights": scene_analysis.get("highlights", []),
             "silence_segments": len(silence_segments),
+            "silence_removed": silence_removed,
+            "auto_zoom": actions.get("zoom_style") != "none",
         },
         "output_url": f"/outputs/{output_name}",
     }
