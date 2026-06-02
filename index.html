@@ -19,18 +19,12 @@
       <button id="newProjectBtn" class="new-project" type="button">+ New Project</button>
 
       <nav class="nav-list" aria-label="Primary navigation">
-        <button class="nav-item active" type="button" data-page="dashboard"><span>Dashboard</span></button>
-        <button class="nav-item" type="button" data-page="copilot"><span>AI Copilot</span></button>
-        <button class="nav-item" type="button" data-page="editor"><span>AI Editor</span></button>
-        <button class="nav-item" type="button" data-page="reference"><span>Reference Match</span></button>
-        <button class="nav-item" type="button" data-page="photo"><span>Photo to Video</span></button>
-        <button class="nav-item" type="button" data-page="style"><span>AI Style Transform</span></button>
+        <button class="nav-item active" type="button" data-page="dashboard"><span>Home</span></button>
+        <button class="nav-item" type="button" data-page="create"><span>Create</span></button>
+        <button class="nav-item" type="button" data-page="tools"><span>AI Tools</span></button>
+        <button class="nav-item" type="button" data-page="assets"><span>Assets</span></button>
         <button class="nav-item" type="button" data-page="templates"><span>Templates</span></button>
-        <button class="nav-item" type="button" data-page="projects"><span>Projects</span></button>
-        <button class="nav-item" type="button" data-page="voice"><span>AI Voice (TTS)</span></button>
-        <button class="nav-item" type="button" data-page="subtitles"><span>Subtitles</span></button>
-        <button class="nav-item" type="button" data-page="music"><span>Music</span></button>
-        <button class="nav-item" type="button" data-page="analytics"><span>Analytics</span></button>
+        <button class="nav-item" type="button" data-page="assistant"><span>Vixa Assistant</span></button>
         <button class="nav-item" type="button" data-page="settings"><span>Settings</span></button>
       </nav>
 
@@ -86,7 +80,7 @@
               </div>
               <div class="hero-actions">
                 <button id="topGenerateBtn" class="primary" type="button">Start New Project</button>
-                <button class="secondary" type="button">AI Assistant</button>
+                <button class="secondary" type="button" data-jump-page="assistant">AI Assistant</button>
               </div>
             </div>
             <button class="play-button" type="button" aria-label="Preview Vixa Studio">▶</button>
@@ -176,10 +170,59 @@
             </article>
           </section>
 
-          <section id="creatorCopilot" class="copilot-panel panel" data-page-section data-page="copilot">
+          <section class="panel create-os-panel" data-page-section data-page="create">
+            <div class="section-title stacked">
+              <span>Creation OS</span>
+              <h3>Start with what you want to make</h3>
+              <p>Choose a creation mode. Vixa opens the right AI workflow instead of dumping every editor control on one screen.</p>
+            </div>
+            <div class="os-mode-grid">
+              <button type="button" data-jump-page="editor"><strong>Video</strong><span>Prompt edit, reels, cuts, subtitles</span></button>
+              <button type="button" data-jump-page="style"><strong>Image</strong><span>Photo magic, style transform, thumbnail base</span></button>
+              <button type="button" data-jump-page="voice"><strong>Audio</strong><span>Voiceover, narration, language voices</span></button>
+              <button type="button" data-jump-page="photo"><strong>Motion</strong><span>Photo to video, pan, zoom, parallax</span></button>
+              <button type="button" data-jump-page="reference"><strong>Reference</strong><span>Copy vibe from another video</span></button>
+              <button type="button" data-jump-page="assistant"><strong>Story</strong><span>Script, plan, captions, export package</span></button>
+            </div>
+          </section>
+
+          <section class="panel tools-os-panel" data-page-section data-page="tools">
+            <div class="section-title stacked">
+              <span>Modular AI Tools</span>
+              <h3>Pick a tool, run a workflow</h3>
+              <p>Vixa is organized like a creator workstation: video, image, audio, assistant, and optimization tools are separated but connected.</p>
+            </div>
+            <div class="tool-os-grid">
+              <button type="button" data-jump-page="editor"><strong>AI Edit</strong><span>Prompt based video editing</span></button>
+              <button type="button" data-jump-page="reference"><strong>Reference Match</strong><span>Match tone, cuts, zooms, captions</span></button>
+              <button type="button" data-jump-page="photo"><strong>Photo to Video</strong><span>Animate stills into motion clips</span></button>
+              <button type="button" data-jump-page="style"><strong>Style Transform</strong><span>Normal photo to stylized AI output</span></button>
+              <button type="button" data-jump-page="voice"><strong>Voice Studio</strong><span>Text to speech in multiple languages</span></button>
+              <button type="button" data-jump-page="subtitles"><strong>Auto Subtitle</strong><span>Whisper captions and caption plan</span></button>
+              <button type="button" data-jump-page="assistant" data-copilot-preset="viral"><strong>Viral Reel AI</strong><span>Hook, retention, CTA score</span></button>
+              <button type="button" data-jump-page="assistant" data-copilot-preset="thumbnail"><strong>Thumbnail AI</strong><span>Frame, title, click optimization</span></button>
+              <button type="button" data-jump-page="assistant" data-copilot-preset="chain"><strong>Prompt Chain AI</strong><span>One prompt to full content pipeline</span></button>
+            </div>
+          </section>
+
+          <section class="panel assets-os-panel" data-page-section data-page="assets projects">
+            <div class="section-title stacked">
+              <span>Asset Library</span>
+              <h3>Your Vixa workspace</h3>
+              <p>Images, videos, voice files, exports, and prompt-chain outputs live in one creator library.</p>
+            </div>
+            <div class="asset-grid">
+              <article><strong>Video Imports</strong><span>12 files</span><small>Raw clips and reference videos</small></article>
+              <article><strong>AI Images</strong><span>8 outputs</span><small>Style transforms and thumbnail bases</small></article>
+              <article><strong>Voiceovers</strong><span>5 tracks</span><small>Generated narration files</small></article>
+              <article><strong>Exports</strong><span>18 renders</span><small>Final reels, drafts, and packages</small></article>
+            </div>
+          </section>
+
+          <section id="creatorCopilot" class="copilot-panel panel" data-page-section data-page="assistant copilot">
             <div class="section-title stacked">
               <span>Vixa Ultimate AI</span>
-              <h3>AI Copilot Creator Hub</h3>
+              <h3>Vixa Assistant</h3>
               <p>One place for viral scoring, highlights, beat sync, tracking, script writing, translation, thumbnails, analytics, and full prompt-chain plans.</p>
             </div>
 

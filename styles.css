@@ -1367,6 +1367,94 @@ video {
     var(--panel);
 }
 
+.create-os-panel,
+.tools-os-panel,
+.assets-os-panel {
+  min-height: 520px;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(73, 184, 255, 0.11), transparent 32%),
+    radial-gradient(circle at 84% 18%, rgba(177, 76, 255, 0.14), transparent 34%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.025)),
+    var(--panel);
+}
+
+.os-mode-grid,
+.tool-os-grid,
+.asset-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.os-mode-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.tool-os-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.asset-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.os-mode-grid button,
+.tool-os-grid button,
+.asset-grid article {
+  min-height: 168px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.065), rgba(255, 255, 255, 0.025)),
+    rgba(10, 18, 34, 0.84);
+  text-align: left;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.24);
+}
+
+.os-mode-grid button::before,
+.tool-os-grid button::before,
+.asset-grid article::before {
+  content: "";
+  display: block;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 18px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--cyan), var(--violet));
+  box-shadow: 0 0 26px rgba(177, 76, 255, 0.22);
+}
+
+.os-mode-grid strong,
+.os-mode-grid span,
+.tool-os-grid strong,
+.tool-os-grid span,
+.asset-grid strong,
+.asset-grid span,
+.asset-grid small {
+  display: block;
+}
+
+.os-mode-grid strong,
+.tool-os-grid strong,
+.asset-grid strong {
+  font-size: 18px;
+}
+
+.os-mode-grid span,
+.tool-os-grid span,
+.asset-grid small {
+  margin-top: 8px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.asset-grid span {
+  margin-top: 10px;
+  font-size: 30px;
+  font-weight: 950;
+  color: var(--cyan);
+}
+
 .copilot-mode-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1814,6 +1902,12 @@ video {
   .overview-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+
+  .os-mode-grid,
+  .tool-os-grid,
+  .asset-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 980px) {
@@ -1904,6 +1998,9 @@ video {
   .analysis-grid,
   .ai-intelligence-grid,
   .ai-setup-grid,
+  .os-mode-grid,
+  .tool-os-grid,
+  .asset-grid,
   .style-choice-grid,
   .copilot-mode-grid,
   .voice-selectors,

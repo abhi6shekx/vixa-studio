@@ -611,6 +611,10 @@ def home():
     return send_from_directory(BASE_DIR, "index.html")
 
 
+@app.get("/create")
+@app.get("/tools")
+@app.get("/assets")
+@app.get("/assistant")
 @app.get("/editor")
 @app.get("/reference-match")
 @app.get("/photo-to-video")

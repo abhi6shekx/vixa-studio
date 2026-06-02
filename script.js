@@ -97,6 +97,10 @@ const copilotJson = document.querySelector("#copilotJson");
 
 const pageRoutes = {
   "/": "dashboard",
+  "/create": "create",
+  "/tools": "tools",
+  "/assets": "assets",
+  "/assistant": "assistant",
   "/copilot": "copilot",
   "/editor": "editor",
   "/reference-match": "reference",
@@ -859,8 +863,8 @@ video.addEventListener("loadedmetadata", () => {
 video.addEventListener("timeupdate", updateCaptionOverlay);
 
 generateBtn.addEventListener("click", generatePlan);
-topGenerateBtn.addEventListener("click", resetNewProject);
-newProjectBtn.addEventListener("click", resetNewProject);
+topGenerateBtn.addEventListener("click", () => showPage("create"));
+newProjectBtn.addEventListener("click", () => showPage("create"));
 
 applyBtn.addEventListener("click", () => {
   if (!selectedFile && !editPlan.length) {
@@ -942,6 +946,14 @@ document.querySelectorAll("[data-tool]").forEach((button) => {
 
 document.querySelectorAll("[data-jump-page]").forEach((button) => {
   button.addEventListener("click", () => {
+    const preset = button.dataset.copilotPreset;
+    if (preset) {
+      selectedCopilotMode = preset;
+      document.querySelectorAll(".copilot-mode-chip").forEach((item) => {
+        item.classList.toggle("active", item.dataset.mode === preset);
+      });
+      if (copilotStatus) copilotStatus.textContent = `${button.querySelector("strong")?.textContent || "AI mode"} selected`;
+    }
     showPage(button.dataset.jumpPage || "dashboard");
   });
 });
