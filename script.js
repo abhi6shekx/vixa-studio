@@ -34,6 +34,26 @@ const photoPreviewImage = document.querySelector("#photoPreviewImage");
 const photoPreviewCaption = document.querySelector("#photoPreviewCaption");
 const photoPreviewMeta = document.querySelector("#photoPreviewMeta");
 const photoRenderedVideo = document.querySelector("#photoRenderedVideo");
+const styleImageInput = document.querySelector("#styleImageInput");
+const styleReferenceInput = document.querySelector("#styleReferenceInput");
+const styleImageName = document.querySelector("#styleImageName");
+const styleReferenceName = document.querySelector("#styleReferenceName");
+const stylePrompt = document.querySelector("#stylePrompt");
+const styleGenerateBtn = document.querySelector("#styleGenerateBtn");
+const styleButtonLabel = styleGenerateBtn?.querySelector(".style-button-label");
+const styleStatus = document.querySelector("#styleStatus");
+const stylePlaceholder = document.querySelector("#stylePlaceholder");
+const styleOutputImage = document.querySelector("#styleOutputImage");
+const styleDownloadLink = document.querySelector("#styleDownloadLink");
+const voiceText = document.querySelector("#voiceText");
+const voiceLanguage = document.querySelector("#voiceLanguage");
+const voiceType = document.querySelector("#voiceType");
+const voiceEmotion = document.querySelector("#voiceEmotion");
+const voiceGenerateBtn = document.querySelector("#voiceGenerateBtn");
+const voiceButtonLabel = voiceGenerateBtn?.querySelector(".voice-button-label");
+const voiceStatus = document.querySelector("#voiceStatus");
+const voiceAudio = document.querySelector("#voiceAudio");
+const voiceDownloadLink = document.querySelector("#voiceDownloadLink");
 const mainVideoInput = document.querySelector("#mainVideo");
 const referenceVideoInput = document.querySelector("#referenceVideo");
 const referencePrompt = document.querySelector("#referencePrompt");
@@ -71,6 +91,7 @@ const pageRoutes = {
   "/editor": "editor",
   "/reference-match": "reference",
   "/photo-to-video": "photo",
+  "/style-transform": "style",
   "/templates": "templates",
   "/projects": "projects",
   "/voice": "voice",
@@ -90,6 +111,7 @@ let selectedStyle = "cinematic";
 let selectedPhotoMotion = "slow-zoom";
 let selectedPhotoDuration = 5;
 let selectedPhotoRatio = "16:9";
+let selectedImageStyle = "voxel";
 let photoUrls = [];
 let photoTimer = null;
 let photoIndex = 0;
@@ -313,6 +335,24 @@ function setPhotoLoading(isLoading) {
   }
 }
 
+function setStyleLoading(isLoading) {
+  if (!styleGenerateBtn) return;
+  styleGenerateBtn.disabled = isLoading;
+  styleGenerateBtn.classList.toggle("is-loading", isLoading);
+  if (styleButtonLabel) {
+    styleButtonLabel.textContent = isLoading ? "Generating AI Edit" : "Generate AI Image Edit";
+  }
+}
+
+function setVoiceLoading(isLoading) {
+  if (!voiceGenerateBtn) return;
+  voiceGenerateBtn.disabled = isLoading;
+  voiceGenerateBtn.classList.toggle("is-loading", isLoading);
+  if (voiceButtonLabel) {
+    voiceButtonLabel.textContent = isLoading ? "Generating Voice" : "Generate Voiceover";
+  }
+}
+
 function setReferenceLoading(isLoading) {
   referenceGenerateBtn.disabled = isLoading;
   referenceGenerateBtn.classList.toggle("is-loading", isLoading);
@@ -410,6 +450,30 @@ function resetNewProject(options = {}) {
   photoRenderedVideo.removeAttribute("src");
   photoRenderedVideo.load();
   photoStage.classList.remove("is-playing", "has-rain");
+  if (styleImageInput) styleImageInput.value = "";
+  if (styleReferenceInput) styleReferenceInput.value = "";
+  if (styleImageName) styleImageName.textContent = "JPG, PNG, or WebP";
+  if (styleReferenceName) styleReferenceName.textContent = "Use this for reference style copy";
+  if (styleStatus) styleStatus.textContent = "Upload a photo to begin";
+  if (stylePlaceholder) stylePlaceholder.hidden = false;
+  if (styleOutputImage) {
+    styleOutputImage.hidden = true;
+    styleOutputImage.removeAttribute("src");
+  }
+  if (styleDownloadLink) {
+    styleDownloadLink.hidden = true;
+    styleDownloadLink.href = "#";
+  }
+  if (voiceStatus) voiceStatus.textContent = "Ready for script";
+  if (voiceAudio) {
+    voiceAudio.hidden = true;
+    voiceAudio.removeAttribute("src");
+    voiceAudio.load();
+  }
+  if (voiceDownloadLink) {
+    voiceDownloadLink.hidden = true;
+    voiceDownloadLink.href = "#";
+  }
   clearPhotoTimer();
   resetPhotoObjectUrls();
 
@@ -483,6 +547,89 @@ async function generatePhotoVideo() {
     photoPreviewMeta.textContent = "Render failed. Check FFmpeg and try again.";
   } finally {
     setPhotoLoading(false);
+  }
+}
+
+async function generateStyleTransform() {
+  const file = styleImageInput?.files?.[0];
+  if (!file) {
+    styleStatus.textContent = "Upload a photo first";
+    styleImageInput?.focus();
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("image", file);
+  formData.append("style", selectedImageStyle);
+  formData.append("prompt", stylePrompt?.value || "");
+  const reference = styleReferenceInput?.files?.[0];
+  if (reference) formData.append("reference_image", reference);
+
+  setStyleLoading(true);
+  styleStatus.textContent = "Local AI is transforming your photo...";
+
+  try {
+    const response = await fetch("/style-transform", { method: "POST", body: formData });
+    const result = await response.json();
+    if (!response.ok || !result.output_url) {
+      throw new Error(result.message || "AI style transform failed");
+    }
+
+    stylePlaceholder.hidden = true;
+    styleOutputImage.hidden = false;
+    styleOutputImage.src = `${result.output_url}?t=${Date.now()}`;
+    styleDownloadLink.href = result.download_url || result.output_url;
+    styleDownloadLink.hidden = false;
+    styleStatus.textContent = `${result.message} Style: ${result.style}`;
+    statusText.textContent = "AI Style Transform generated a real image output";
+  } catch (error) {
+    styleStatus.textContent = error.message || "AI style transform failed";
+    statusText.textContent = "AI Style Transform failed. Check backend logs.";
+  } finally {
+    setStyleLoading(false);
+  }
+}
+
+async function generateVoiceover() {
+  const text = voiceText?.value?.trim() || "";
+  if (!text) {
+    voiceStatus.textContent = "Write a script first";
+    voiceText?.focus();
+    return;
+  }
+
+  setVoiceLoading(true);
+  voiceStatus.textContent = "Generating local AI voiceover...";
+
+  try {
+    const response = await fetch("/api/tts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text,
+        language: voiceLanguage?.value || "english",
+        voice: voiceType?.value || "narrator",
+        emotion: voiceEmotion?.value || "neutral",
+      }),
+    });
+    const result = await response.json();
+    if (!response.ok || !result.output_url) {
+      throw new Error(result.message || "Voice generation failed");
+    }
+
+    voiceAudio.hidden = false;
+    voiceAudio.src = `${result.output_url}?t=${Date.now()}`;
+    voiceAudio.load();
+    voiceAudio.play().catch(() => {});
+    voiceDownloadLink.href = result.download_url || result.output_url;
+    voiceDownloadLink.hidden = false;
+    voiceStatus.textContent = `${result.message} Engine: ${result.meta?.engine || "local"}`;
+    statusText.textContent = "Voice Studio generated a real audio file";
+  } catch (error) {
+    voiceStatus.textContent = error.message || "Voice generation failed";
+    statusText.textContent = "Voice Studio failed. Check backend logs.";
+  } finally {
+    setVoiceLoading(false);
   }
 }
 
@@ -771,6 +918,30 @@ photoInput.addEventListener("change", () => {
 });
 
 photoGenerateBtn.addEventListener("click", generatePhotoVideo);
+
+styleImageInput?.addEventListener("change", () => {
+  const file = styleImageInput.files?.[0];
+  styleImageName.textContent = file ? file.name : "JPG, PNG, or WebP";
+  styleStatus.textContent = file ? "Photo ready for AI Style Transform" : "Upload a photo to begin";
+});
+
+styleReferenceInput?.addEventListener("change", () => {
+  const file = styleReferenceInput.files?.[0];
+  styleReferenceName.textContent = file ? file.name : "Use this for reference style copy";
+  if (file) styleStatus.textContent = "Reference image loaded";
+});
+
+document.querySelectorAll(".image-style-chip").forEach((button) => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll(".image-style-chip").forEach((item) => item.classList.remove("active"));
+    button.classList.add("active");
+    selectedImageStyle = button.dataset.style;
+    styleStatus.textContent = `${button.textContent} style selected`;
+  });
+});
+
+styleGenerateBtn?.addEventListener("click", generateStyleTransform);
+voiceGenerateBtn?.addEventListener("click", generateVoiceover);
 
 mainVideoInput.addEventListener("change", () => {
   const file = mainVideoInput.files?.[0];

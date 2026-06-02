@@ -23,6 +23,7 @@
         <button class="nav-item" type="button" data-page="editor"><span>AI Editor</span></button>
         <button class="nav-item" type="button" data-page="reference"><span>Reference Match</span></button>
         <button class="nav-item" type="button" data-page="photo"><span>Photo to Video</span></button>
+        <button class="nav-item" type="button" data-page="style"><span>AI Style Transform</span></button>
         <button class="nav-item" type="button" data-page="templates"><span>Templates</span></button>
         <button class="nav-item" type="button" data-page="projects"><span>Projects</span></button>
         <button class="nav-item" type="button" data-page="voice"><span>AI Voice (TTS)</span></button>
@@ -431,6 +432,67 @@
             <div id="captionsList" class="captions-list"></div>
           </section>
 
+          <section id="styleTransform" class="style-transform-panel panel" data-page-section data-page="style">
+            <div class="section-title stacked">
+              <span>Photo Magic AI</span>
+              <h3>AI Style Transform</h3>
+              <p>Upload a normal photo, choose a look, and generate a stylized AI edit as a real image output.</p>
+            </div>
+
+            <div class="style-transform-grid">
+              <div class="style-transform-controls">
+                <label class="upload-zone style-upload" for="styleImageInput">
+                  <input id="styleImageInput" type="file" accept="image/*" />
+                  <span class="upload-icon">+</span>
+                  <strong>Upload normal photo</strong>
+                  <small id="styleImageName">JPG, PNG, or WebP</small>
+                </label>
+
+                <label class="upload-zone reference-upload" for="styleReferenceInput">
+                  <input id="styleReferenceInput" type="file" accept="image/*" />
+                  <span class="upload-icon">R</span>
+                  <strong>Optional reference image</strong>
+                  <small id="styleReferenceName">Use this for reference style copy</small>
+                </label>
+
+                <label>Choose AI style</label>
+                <div class="choice-grid style-choice-grid">
+                  <button class="image-style-chip active" type="button" data-style="voxel">Voxel World</button>
+                  <button class="image-style-chip" type="button" data-style="anime">Anime</button>
+                  <button class="image-style-chip" type="button" data-style="animated-3d">3D Animation</button>
+                  <button class="image-style-chip" type="button" data-style="cinematic">Cinematic</button>
+                  <button class="image-style-chip" type="button" data-style="cyberpunk">Cyberpunk</button>
+                  <button class="image-style-chip" type="button" data-style="cartoon">Cartoon</button>
+                  <button class="image-style-chip" type="button" data-style="storybook">Storybook Anime</button>
+                  <button class="image-style-chip" type="button" data-style="reference">Copy Reference</button>
+                </div>
+
+                <label for="stylePrompt">Style prompt</label>
+                <textarea id="stylePrompt" rows="4">Make this photo cinematic with neon glow, dramatic lighting, and premium detail.</textarea>
+
+                <button id="styleGenerateBtn" class="primary generate-button generate" type="button">
+                  <span class="style-button-label">Generate AI Image Edit</span>
+                  <span class="button-loader" aria-hidden="true"></span>
+                </button>
+              </div>
+
+              <div class="style-preview-card">
+                <div class="section-title">
+                  <h3>AI image output</h3>
+                  <p id="styleStatus">Upload a photo to begin</p>
+                </div>
+                <div class="style-output-stage">
+                  <div id="stylePlaceholder" class="photo-placeholder">
+                    <strong>AI stylized photo</strong>
+                    <span>Generated image preview will appear here</span>
+                  </div>
+                  <img id="styleOutputImage" alt="AI stylized output" hidden />
+                </div>
+                <a id="styleDownloadLink" class="download-link" href="#" download hidden>Download AI Image</a>
+              </div>
+            </div>
+          </section>
+
           <section class="panel page-panel" data-page-section data-page="templates">
             <div class="section-title stacked">
               <span>Template Library</span>
@@ -459,14 +521,69 @@
             </div>
           </section>
 
-          <section class="panel page-panel" data-page-section data-page="voice">
+          <section class="panel page-panel voice-studio-panel" data-page-section data-page="voice">
             <div class="section-title stacked">
-              <span>AI Voice</span>
-              <h3>Text to speech narration</h3>
-              <p>Write narration and generate voiceover tracks for your edit.</p>
+              <span>Voice Studio</span>
+              <h3>Multi-language AI voiceover</h3>
+              <p>Write narration, choose voice/language/emotion, and generate a real audio file locally.</p>
             </div>
-            <textarea rows="6" placeholder="Write your voiceover script..."></textarea>
-            <button class="primary generate" type="button">Generate Voiceover</button>
+            <div class="voice-grid">
+              <div class="voice-controls">
+                <label for="voiceText">Voice script</label>
+                <textarea id="voiceText" rows="7">Create beyond editing. Welcome to Vixa Studio, your AI video creation suite.</textarea>
+
+                <div class="voice-selectors">
+                  <label>Language
+                    <select id="voiceLanguage">
+                      <option value="english">English</option>
+                      <option value="hindi">Hindi</option>
+                      <option value="marathi">Marathi</option>
+                      <option value="japanese">Japanese</option>
+                      <option value="korean">Korean</option>
+                      <option value="spanish">Spanish</option>
+                      <option value="french">French</option>
+                      <option value="arabic">Arabic</option>
+                      <option value="tamil">Tamil</option>
+                    </select>
+                  </label>
+                  <label>Voice
+                    <select id="voiceType">
+                      <option value="narrator">Narrator</option>
+                      <option value="cinematic">Deep Cinematic</option>
+                      <option value="female">Female</option>
+                      <option value="anime">Anime Energy</option>
+                      <option value="robotic">Robotic</option>
+                      <option value="podcast">Podcast</option>
+                      <option value="emotional">Emotional</option>
+                    </select>
+                  </label>
+                  <label>Emotion
+                    <select id="voiceEmotion">
+                      <option value="neutral">Neutral</option>
+                      <option value="excited">Excited</option>
+                      <option value="sad cinematic">Sad Cinematic</option>
+                      <option value="aggressive trailer">Aggressive Trailer</option>
+                      <option value="calm premium">Calm Premium</option>
+                    </select>
+                  </label>
+                </div>
+
+                <button id="voiceGenerateBtn" class="primary generate-button generate" type="button">
+                  <span class="voice-button-label">Generate Voiceover</span>
+                  <span class="button-loader" aria-hidden="true"></span>
+                </button>
+              </div>
+
+              <div class="voice-preview-card">
+                <div class="section-title">
+                  <h3>Audio preview</h3>
+                  <p id="voiceStatus">Ready for script</p>
+                </div>
+                <div class="waveform"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+                <audio id="voiceAudio" controls hidden></audio>
+                <a id="voiceDownloadLink" class="download-link" href="#" download hidden>Download Voiceover</a>
+              </div>
+            </div>
           </section>
 
           <section class="panel page-panel" data-page-section data-page="settings">

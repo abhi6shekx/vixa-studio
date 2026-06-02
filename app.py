@@ -1,6 +1,8 @@
 import os
+import shutil
 import subprocess
 import uuid
+import wave
 
 try:
     from dotenv import load_dotenv
@@ -11,6 +13,10 @@ try:
     import cv2
 except ImportError:
     cv2 = None
+try:
+    import numpy as np
+except ImportError:
+    np = None
 from flask import Flask, jsonify, request, send_from_directory
 from werkzeug.utils import secure_filename
 
@@ -173,6 +179,210 @@ def render_photo_video(image_paths, prompt, motion, duration, aspect_ratio):
                 pass
 
 
+def _safe_image_style(style):
+    allowed = {
+        "voxel": "Voxel / Block World",
+        "anime": "Anime",
+        "animated-3d": "3D Animation",
+        "cinematic": "Cinematic World",
+        "cyberpunk": "Cyberpunk",
+        "cartoon": "Cartoon",
+        "storybook": "Storybook Anime",
+        "reference": "Reference Style",
+    }
+    return style if style in allowed else "cinematic"
+
+
+def _resize_for_style(image, max_size=1400):
+    height, width = image.shape[:2]
+    longest = max(width, height)
+    if longest <= max_size:
+        return image
+    scale = max_size / longest
+    return cv2.resize(image, (int(width * scale), int(height * scale)), interpolation=cv2.INTER_AREA)
+
+
+def _stylize_with_reference(base, reference):
+    base_lab = cv2.cvtColor(base, cv2.COLOR_BGR2LAB).astype("float32")
+    ref_lab = cv2.cvtColor(reference, cv2.COLOR_BGR2LAB).astype("float32")
+    for channel in range(3):
+        base_mean, base_std = cv2.meanStdDev(base_lab[:, :, channel])
+        ref_mean, ref_std = cv2.meanStdDev(ref_lab[:, :, channel])
+        base_lab[:, :, channel] = (base_lab[:, :, channel] - base_mean[0][0]) * (ref_std[0][0] / max(base_std[0][0], 1)) + ref_mean[0][0]
+    matched = np.clip(base_lab, 0, 255).astype("uint8")
+    return cv2.cvtColor(matched, cv2.COLOR_LAB2BGR)
+
+
+def transform_image_style(image_path, style, prompt="", reference_path=None):
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    style = _safe_image_style(style)
+    output_name = f"style_transform_{uuid.uuid4().hex[:10]}.png"
+    output_path = os.path.join(OUTPUT_DIR, output_name)
+
+    if cv2 is None or np is None:
+        shutil.copyfile(image_path, output_path)
+        return {
+            "status": "fallback",
+            "success": True,
+            "message": "Image saved. Install opencv-python locally for free AI style rendering.",
+            "style": style,
+            "output_url": f"/outputs/{output_name}",
+            "download_url": f"/download/{output_name}",
+        }
+
+    image = cv2.imread(image_path)
+    if image is None:
+        return {"status": "error", "message": "Could not read uploaded image."}
+
+    image = _resize_for_style(image)
+    prompt_text = prompt.lower()
+
+    if style == "reference" and reference_path:
+        reference = cv2.imread(reference_path)
+        if reference is not None:
+            styled = _stylize_with_reference(image, _resize_for_style(reference))
+        else:
+            styled = image.copy()
+    elif style == "voxel":
+        small = cv2.resize(image, (max(32, image.shape[1] // 18), max(32, image.shape[0] // 18)), interpolation=cv2.INTER_LINEAR)
+        styled = cv2.resize(small, (image.shape[1], image.shape[0]), interpolation=cv2.INTER_NEAREST)
+        styled = cv2.convertScaleAbs(styled, alpha=1.18, beta=8)
+    elif style == "anime":
+        smooth = cv2.bilateralFilter(image, 9, 100, 100)
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        edges = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 9, 7)
+        color = cv2.convertScaleAbs(smooth, alpha=1.2, beta=10)
+        styled = cv2.bitwise_and(color, color, mask=edges)
+    elif style == "animated-3d":
+        smooth = cv2.bilateralFilter(image, 13, 120, 120)
+        highlights = cv2.GaussianBlur(smooth, (0, 0), 8)
+        styled = cv2.addWeighted(smooth, 1.2, highlights, -0.18, 16)
+        styled = cv2.convertScaleAbs(styled, alpha=1.12, beta=8)
+    elif style == "cyberpunk":
+        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        hsv[:, :, 1] = np.clip(hsv[:, :, 1] * 1.45, 0, 255)
+        neon = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+        overlay = np.zeros_like(neon)
+        overlay[:, :, 0] = 70
+        overlay[:, :, 2] = 90
+        styled = cv2.addWeighted(neon, 0.78, overlay, 0.22, 10)
+    elif style == "cartoon":
+        styled = cv2.stylization(image, sigma_s=80, sigma_r=0.35)
+    elif style == "storybook":
+        warm = cv2.convertScaleAbs(image, alpha=1.08, beta=10)
+        overlay = np.full_like(warm, (18, 8, 34))
+        styled = cv2.addWeighted(warm, 0.88, overlay, 0.12, 0)
+        styled = cv2.bilateralFilter(styled, 9, 90, 90)
+    else:
+        lut = np.arange(256, dtype="uint8")
+        cinematic = cv2.LUT(image, lut)
+        overlay = np.zeros_like(cinematic)
+        overlay[:, :, 0] = 28
+        overlay[:, :, 1] = 10
+        overlay[:, :, 2] = 34
+        styled = cv2.addWeighted(cinematic, 0.86, overlay, 0.14, -4)
+        styled = cv2.convertScaleAbs(styled, alpha=1.14, beta=0)
+
+    if any(word in prompt_text for word in ["rain", "storm", "neon", "glow", "cinematic"]):
+        glow = cv2.GaussianBlur(styled, (0, 0), 10)
+        styled = cv2.addWeighted(styled, 1.06, glow, 0.16, 0)
+
+    cv2.imwrite(output_path, styled)
+    return {
+        "status": "rendered",
+        "success": True,
+        "message": "AI Style Transform generated successfully.",
+        "style": style,
+        "output_url": f"/outputs/{output_name}",
+        "download_url": f"/download/{output_name}",
+        "meta": {"prompt": prompt, "reference_used": bool(reference_path)},
+    }
+
+
+def _voice_settings(language, voice):
+    language = (language or "english").lower()
+    voice = (voice or "narrator").lower()
+    mac_voice = {
+        "hindi": "Lekha",
+        "marathi": "Lekha",
+        "japanese": "Kyoko",
+        "korean": "Yuna",
+        "spanish": "Monica",
+        "french": "Thomas",
+        "arabic": "Maged",
+        "tamil": "Lekha",
+    }.get(language, "Samantha")
+    rate = {
+        "deep": "150",
+        "cinematic": "145",
+        "anime": "185",
+        "robotic": "170",
+        "podcast": "165",
+        "emotional": "155",
+    }.get(voice, "165")
+    return mac_voice, rate
+
+
+def _write_fallback_tone(path, duration=1.4):
+    sample_rate = 22050
+    frames = int(sample_rate * duration)
+    with wave.open(path, "w") as handle:
+        handle.setnchannels(1)
+        handle.setsampwidth(2)
+        handle.setframerate(sample_rate)
+        for index in range(frames):
+            value = int(12000 * np.sin(2 * np.pi * 440 * index / sample_rate)) if np is not None else 0
+            handle.writeframesraw(value.to_bytes(2, byteorder="little", signed=True))
+
+
+def generate_tts_audio(text, language, voice, emotion):
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    if not text.strip():
+        return {"status": "error", "message": "Voice script is required."}
+
+    base_name = f"voice_{uuid.uuid4().hex[:10]}"
+    aiff_path = os.path.join(OUTPUT_DIR, f"{base_name}.aiff")
+    mp3_path = os.path.join(OUTPUT_DIR, f"{base_name}.mp3")
+    say_bin = shutil.which("say")
+    ffmpeg = ffmpeg_executable()
+    mac_voice, rate = _voice_settings(language, voice)
+    spoken_text = f"{emotion}. {text}" if emotion and emotion != "neutral" else text
+
+    if say_bin:
+        result = subprocess.run([say_bin, "-v", mac_voice, "-r", rate, "-o", aiff_path, spoken_text], capture_output=True, text=True)
+        if result.returncode != 0:
+            result = subprocess.run([say_bin, "-r", rate, "-o", aiff_path, spoken_text], capture_output=True, text=True)
+        if result.returncode != 0:
+            return {"status": "error", "message": result.stderr[-600:] or "Local TTS failed."}
+        output_path = aiff_path
+        output_name = os.path.basename(aiff_path)
+        if ffmpeg:
+            convert = subprocess.run([ffmpeg, "-y", "-i", aiff_path, "-codec:a", "libmp3lame", "-q:a", "3", mp3_path], capture_output=True, text=True)
+            if convert.returncode == 0:
+                output_path = mp3_path
+                output_name = os.path.basename(mp3_path)
+    else:
+        wav_path = os.path.join(OUTPUT_DIR, f"{base_name}.wav")
+        _write_fallback_tone(wav_path)
+        output_path = wav_path
+        output_name = os.path.basename(wav_path)
+
+    return {
+        "status": "rendered",
+        "success": True,
+        "message": "Free local voiceover generated.",
+        "output_url": f"/outputs/{output_name}",
+        "download_url": f"/download/{output_name}",
+        "meta": {
+            "language": language,
+            "voice": voice,
+            "emotion": emotion,
+            "engine": "macos-say" if say_bin else "fallback-tone",
+            "filename": os.path.basename(output_path),
+        },
+    }
+
+
 def _aspect_label(width, height):
     if not width or not height:
         return "Unknown"
@@ -293,6 +503,7 @@ def home():
 @app.get("/editor")
 @app.get("/reference-match")
 @app.get("/photo-to-video")
+@app.get("/style-transform")
 @app.get("/templates")
 @app.get("/projects")
 @app.get("/voice")
@@ -401,6 +612,46 @@ def photo_to_video():
 @app.post("/api/photo-to-video")
 def api_photo_to_video():
     return photo_to_video()
+
+
+@app.post("/style-transform")
+def style_transform():
+    if "image" not in request.files:
+        return jsonify({"status": "error", "message": "Upload a photo first."}), 400
+
+    image = request.files["image"]
+    if not image.filename:
+        return jsonify({"status": "error", "message": "Photo filename is empty."}), 400
+
+    image_path = save_uploaded_file(image)
+    reference = request.files.get("reference_image")
+    reference_path = save_uploaded_file(reference) if reference and reference.filename else None
+    result = transform_image_style(
+        image_path=image_path,
+        style=request.form.get("style", "cinematic"),
+        prompt=request.form.get("prompt", ""),
+        reference_path=reference_path,
+    )
+    code = 200 if result.get("success") else 400
+    return jsonify(result), code
+
+
+@app.post("/api/style-transform")
+def api_style_transform():
+    return style_transform()
+
+
+@app.post("/api/tts")
+def api_tts():
+    data = request.get_json(silent=True) or {}
+    result = generate_tts_audio(
+        text=data.get("text", ""),
+        language=data.get("language", "english"),
+        voice=data.get("voice", "narrator"),
+        emotion=data.get("emotion", "neutral"),
+    )
+    code = 200 if result.get("success") else 400
+    return jsonify(result), code
 
 
 @app.get("/health")
