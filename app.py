@@ -383,6 +383,117 @@ def generate_tts_audio(text, language, voice, emotion):
     }
 
 
+def generate_creator_ai_plan(mode, prompt, media_context=""):
+    prompt_text = (prompt or "").strip()
+    mode = (mode or "copilot").strip()
+    combined = f"{mode} {prompt_text} {media_context}".lower()
+    actions = understand_prompt(prompt_text or mode)
+
+    mode_titles = {
+        "copilot": "AI Copilot Advisor",
+        "viral": "Viral Reel AI",
+        "highlights": "Auto Highlight AI",
+        "beat": "Music Beat AI",
+        "tracking": "Face / Object Tracking",
+        "background": "Smart Background AI",
+        "script": "AI Script Writer",
+        "translate": "AI Translator + Dub",
+        "thumbnail": "Thumbnail AI",
+        "analytics": "AI Analytics",
+        "chain": "Prompt Chain AI",
+    }
+
+    hook_score = 8 if any(word in combined for word in ["hook", "viral", "short", "reel"]) else 5
+    pacing_score = 8 if any(word in combined for word in ["fast", "beat", "cuts", "music"]) else 6
+    caption_score = 9 if actions.get("captions") else 5
+    total_score = round((hook_score + pacing_score + caption_score) / 3, 1)
+
+    plans = {
+        "copilot": [
+            "Start with a 2 second hook and remove slow intro footage.",
+            "Add punch-in zooms on key words and emotional moments.",
+            "Use bold captions with high contrast and short lines.",
+            "Export one 9:16 reel and one 1:1 social cut.",
+        ],
+        "viral": [
+            f"Viral score: {total_score}/10 based on hook, pacing, and caption clarity.",
+            "First 3 seconds need a clear promise, question, or visual surprise.",
+            "Add CTA in the last 4 seconds: follow, save, or comment.",
+            "Keep final reel between 22 and 38 seconds for retention.",
+        ],
+        "highlights": [
+            "Detect high-energy audio peaks and visual motion changes.",
+            "Keep funny, emotional, or high-contrast moments.",
+            "Create 3 short candidates: 15 sec, 30 sec, and 45 sec.",
+            "Add captions only on the selected highlight clips.",
+        ],
+        "beat": [
+            "Detect beats from uploaded music waveform.",
+            "Place cuts on downbeats and transitions on beat drops.",
+            "Use speed ramps before major beat changes.",
+            "Sync zoom pulses with kick and snare moments.",
+        ],
+        "tracking": [
+            "Detect primary face or subject in each scene.",
+            "Apply auto-center crop for 9:16 reels.",
+            "Add smooth subject-follow zoom when the subject moves.",
+            "Avoid jumpy tracking by easing between detected positions.",
+        ],
+        "background": [
+            "Separate subject from background where possible.",
+            "Add cinematic blur, sky replacement, or neon environment.",
+            "Use green-screen style cutout for creator shots.",
+            "Keep edge feathering soft around hair and hands.",
+        ],
+        "script": [
+            "Write a hook, 3 punchy points, and a short CTA.",
+            "Generate matching voiceover text and caption lines.",
+            "Suggest visual shots for each line.",
+            "Prepare a 30 second reel structure.",
+        ],
+        "translate": [
+            "Transcribe original speech and detect language.",
+            "Translate to target language with short subtitle-safe lines.",
+            "Generate dubbed voiceover and align it to caption timings.",
+            "Export original subtitles plus dubbed version.",
+        ],
+        "thumbnail": [
+            "Pick the clearest frame with face/action/product visibility.",
+            "Add 3 to 5 word high-impact title text.",
+            "Use purple/blue contrast and readable mobile scale.",
+            "Generate two variants: clean premium and high-energy viral.",
+        ],
+        "analytics": [
+            f"Retention risk: {'medium' if total_score >= 6 else 'high'} unless intro is tightened.",
+            "Watch for drop after 8 seconds if the topic is not visually changing.",
+            "Caption density should stay under 8 words per line.",
+            "Use faster cuts if final output is longer than 40 seconds.",
+        ],
+        "chain": [
+            "Step 1: transform photo/video style based on prompt.",
+            "Step 2: create motion video or edited reel.",
+            "Step 3: generate captions and voiceover.",
+            "Step 4: create thumbnail and export package.",
+        ],
+    }
+
+    return {
+        "status": "ok",
+        "success": True,
+        "mode": mode,
+        "title": mode_titles.get(mode, "AI Creator Plan"),
+        "score": total_score,
+        "actions": actions,
+        "recommendations": plans.get(mode, plans["copilot"]),
+        "pipeline": [
+            {"step": "Analyze", "detail": "Read prompt, media context, pacing, captions, and style intent."},
+            {"step": "Plan", "detail": "Convert creator goal into editing actions and export targets."},
+            {"step": "Generate", "detail": "Send tasks to video, image, TTS, subtitles, or thumbnail tools."},
+        ],
+        "next_tools": ["AI Editor", "Photo to Video", "AI Style Transform", "Voice Studio", "Subtitles"],
+    }
+
+
 def _aspect_label(width, height):
     if not width or not height:
         return "Unknown"
@@ -504,6 +615,7 @@ def home():
 @app.get("/reference-match")
 @app.get("/photo-to-video")
 @app.get("/style-transform")
+@app.get("/copilot")
 @app.get("/templates")
 @app.get("/projects")
 @app.get("/voice")
@@ -652,6 +764,19 @@ def api_tts():
     )
     code = 200 if result.get("success") else 400
     return jsonify(result), code
+
+
+@app.post("/api/copilot")
+def api_copilot():
+    data = request.get_json(silent=True) or {}
+    prompt = data.get("prompt", "")
+    if not prompt.strip():
+        return jsonify({"status": "error", "message": "Prompt is required."}), 400
+    return jsonify(generate_creator_ai_plan(
+        mode=data.get("mode", "copilot"),
+        prompt=prompt,
+        media_context=data.get("media_context", ""),
+    ))
 
 
 @app.get("/health")

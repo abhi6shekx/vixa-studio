@@ -893,7 +893,8 @@ textarea {
 .editor,
 .reference-editor,
 .photo-video-panel,
-.style-transform-panel {
+.style-transform-panel,
+.copilot-panel {
   scroll-margin-top: 20px;
 }
 
@@ -948,6 +949,7 @@ textarea {
 
 .style-chip,
 .image-style-chip,
+.copilot-mode-chip,
 .motion-chip,
 .duration-chip,
 .photo-ratio-chip,
@@ -963,6 +965,7 @@ textarea {
 
 .style-chip.active,
 .image-style-chip.active,
+.copilot-mode-chip.active,
 .motion-chip.active,
 .duration-chip.active,
 .photo-ratio-chip.active,
@@ -1009,6 +1012,7 @@ textarea {
 .reference-grid,
 .reference-workflow,
 .style-transform-grid,
+.copilot-grid,
 .voice-grid,
 .photo-video-grid,
 .preview-workspace {
@@ -1303,6 +1307,7 @@ video {
 
 .photo-controls,
 .style-transform-controls,
+.copilot-controls,
 .voice-controls {
   display: grid;
   gap: 14px;
@@ -1340,16 +1345,84 @@ video {
 }
 
 .style-transform-grid,
+.copilot-grid,
 .voice-grid {
   grid-template-columns: minmax(320px, 0.92fr) minmax(360px, 1.08fr);
 }
 
 .style-preview-card,
+.copilot-output-card,
 .voice-preview-card {
   padding: 18px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: linear-gradient(145deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.025)), var(--card);
+}
+
+.copilot-panel {
+  background:
+    radial-gradient(circle at 14% 8%, rgba(104, 232, 255, 0.12), transparent 34%),
+    radial-gradient(circle at 78% 20%, rgba(177, 76, 255, 0.16), transparent 34%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.025)),
+    var(--panel);
+}
+
+.copilot-mode-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.copilot-mode-chip {
+  min-height: 48px;
+  text-align: center;
+}
+
+.copilot-mode-chip.wide {
+  grid-column: span 2;
+}
+
+.viral-score {
+  display: grid;
+  place-items: center;
+  min-height: 150px;
+  margin-bottom: 14px;
+  border: 1px solid rgba(91, 255, 202, 0.22);
+  border-radius: var(--radius);
+  background:
+    radial-gradient(circle at 50% 30%, rgba(91, 255, 202, 0.15), transparent 42%),
+    rgba(0, 0, 0, 0.22);
+}
+
+.viral-score span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.viral-score strong {
+  font-size: clamp(42px, 8vw, 76px);
+  line-height: 1;
+  background: linear-gradient(90deg, var(--green), var(--cyan), var(--violet));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.copilot-recommendations {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.copilot-recommendations p {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  color: #dce6ff;
+  line-height: 1.45;
 }
 
 .style-output-stage {
@@ -1794,6 +1867,7 @@ video {
   .reference-grid,
   .reference-workflow,
   .style-transform-grid,
+  .copilot-grid,
   .voice-grid,
   .photo-video-grid {
     grid-template-columns: 1fr;
@@ -1831,6 +1905,7 @@ video {
   .ai-intelligence-grid,
   .ai-setup-grid,
   .style-choice-grid,
+  .copilot-mode-grid,
   .voice-selectors,
   .selector-row,
   .tool-grid {
@@ -1868,5 +1943,9 @@ video {
 
   .waveform {
     height: 130px;
+  }
+
+  .copilot-mode-chip.wide {
+    grid-column: auto;
   }
 }

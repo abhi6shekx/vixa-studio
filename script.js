@@ -85,9 +85,19 @@ const aiTestBtn = document.querySelector("#aiTestBtn");
 const aiTestOutput = document.querySelector("#aiTestOutput");
 const analyzePromptBtn = document.querySelector("#analyzePromptBtn");
 const promptAiOutput = document.querySelector("#promptAiOutput");
+const copilotPrompt = document.querySelector("#copilotPrompt");
+const copilotMediaContext = document.querySelector("#copilotMediaContext");
+const copilotGenerateBtn = document.querySelector("#copilotGenerateBtn");
+const copilotButtonLabel = copilotGenerateBtn?.querySelector(".copilot-button-label");
+const copilotResultTitle = document.querySelector("#copilotResultTitle");
+const copilotStatus = document.querySelector("#copilotStatus");
+const copilotScore = document.querySelector("#copilotScore");
+const copilotRecommendations = document.querySelector("#copilotRecommendations");
+const copilotJson = document.querySelector("#copilotJson");
 
 const pageRoutes = {
   "/": "dashboard",
+  "/copilot": "copilot",
   "/editor": "editor",
   "/reference-match": "reference",
   "/photo-to-video": "photo",
@@ -112,6 +122,7 @@ let selectedPhotoMotion = "slow-zoom";
 let selectedPhotoDuration = 5;
 let selectedPhotoRatio = "16:9";
 let selectedImageStyle = "voxel";
+let selectedCopilotMode = "copilot";
 let photoUrls = [];
 let photoTimer = null;
 let photoIndex = 0;
@@ -350,6 +361,15 @@ function setVoiceLoading(isLoading) {
   voiceGenerateBtn.classList.toggle("is-loading", isLoading);
   if (voiceButtonLabel) {
     voiceButtonLabel.textContent = isLoading ? "Generating Voice" : "Generate Voiceover";
+  }
+}
+
+function setCopilotLoading(isLoading) {
+  if (!copilotGenerateBtn) return;
+  copilotGenerateBtn.disabled = isLoading;
+  copilotGenerateBtn.classList.toggle("is-loading", isLoading);
+  if (copilotButtonLabel) {
+    copilotButtonLabel.textContent = isLoading ? "Thinking" : "Generate Creator Plan";
   }
 }
 
@@ -633,6 +653,51 @@ async function generateVoiceover() {
   }
 }
 
+async function generateCopilotPlan() {
+  const prompt = copilotPrompt?.value?.trim() || "";
+  if (!prompt) {
+    copilotStatus.textContent = "Write a prompt first";
+    copilotPrompt?.focus();
+    return;
+  }
+
+  setCopilotLoading(true);
+  copilotStatus.textContent = "Vixa AI is building your creator plan...";
+
+  try {
+    const response = await fetch("/api/copilot", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        mode: selectedCopilotMode,
+        prompt,
+        media_context: copilotMediaContext?.value || "",
+      }),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.message || "AI Copilot failed");
+
+    copilotResultTitle.textContent = result.title || "AI Creator Plan";
+    copilotStatus.textContent = "Creator plan generated";
+    copilotScore.textContent = Number.isFinite(result.score) ? `${result.score}/10` : "--";
+    copilotRecommendations.innerHTML = (result.recommendations || [])
+      .map((item) => `<p>${item}</p>`)
+      .join("");
+    copilotJson.textContent = JSON.stringify({
+      mode: result.mode,
+      actions: result.actions,
+      pipeline: result.pipeline,
+      next_tools: result.next_tools,
+    }, null, 2);
+    statusText.textContent = "AI Copilot generated a creator plan";
+  } catch (error) {
+    copilotStatus.textContent = error.message || "AI Copilot failed";
+    copilotJson.textContent = "Could not generate plan.";
+  } finally {
+    setCopilotLoading(false);
+  }
+}
+
 function updateReferenceAnalysis(analysis) {
   analysisTone.textContent = analysis?.color_tone || "--";
   analysisSpeed.textContent = analysis?.speed || "--";
@@ -875,6 +940,12 @@ document.querySelectorAll("[data-tool]").forEach((button) => {
   });
 });
 
+document.querySelectorAll("[data-jump-page]").forEach((button) => {
+  button.addEventListener("click", () => {
+    showPage(button.dataset.jumpPage || "dashboard");
+  });
+});
+
 document.querySelectorAll(".nav-item").forEach((button) => {
   button.addEventListener("click", () => {
     showPage(button.dataset.page || "dashboard");
@@ -942,6 +1013,16 @@ document.querySelectorAll(".image-style-chip").forEach((button) => {
 
 styleGenerateBtn?.addEventListener("click", generateStyleTransform);
 voiceGenerateBtn?.addEventListener("click", generateVoiceover);
+copilotGenerateBtn?.addEventListener("click", generateCopilotPlan);
+
+document.querySelectorAll(".copilot-mode-chip").forEach((button) => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll(".copilot-mode-chip").forEach((item) => item.classList.remove("active"));
+    button.classList.add("active");
+    selectedCopilotMode = button.dataset.mode;
+    copilotStatus.textContent = `${button.textContent} selected`;
+  });
+});
 
 mainVideoInput.addEventListener("change", () => {
   const file = mainVideoInput.files?.[0];

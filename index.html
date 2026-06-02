@@ -20,6 +20,7 @@
 
       <nav class="nav-list" aria-label="Primary navigation">
         <button class="nav-item active" type="button" data-page="dashboard"><span>Dashboard</span></button>
+        <button class="nav-item" type="button" data-page="copilot"><span>AI Copilot</span></button>
         <button class="nav-item" type="button" data-page="editor"><span>AI Editor</span></button>
         <button class="nav-item" type="button" data-page="reference"><span>Reference Match</span></button>
         <button class="nav-item" type="button" data-page="photo"><span>Photo to Video</span></button>
@@ -173,6 +174,59 @@
               <p>Auto subtitles generated <span>32 minutes ago</span></p>
               <p>Silence removed <span>1 hour ago</span></p>
             </article>
+          </section>
+
+          <section id="creatorCopilot" class="copilot-panel panel" data-page-section data-page="copilot">
+            <div class="section-title stacked">
+              <span>Vixa Ultimate AI</span>
+              <h3>AI Copilot Creator Hub</h3>
+              <p>One place for viral scoring, highlights, beat sync, tracking, script writing, translation, thumbnails, analytics, and full prompt-chain plans.</p>
+            </div>
+
+            <div class="copilot-grid">
+              <div class="copilot-controls">
+                <label for="copilotPrompt">Tell Vixa what you want</label>
+                <textarea id="copilotPrompt" rows="6">Meri video boring lag rahi hai. Isko viral reel banao with strong hook, captions, beat sync, Hindi voiceover, thumbnail, and analytics.</textarea>
+
+                <label for="copilotMediaContext">Media context</label>
+                <input id="copilotMediaContext" type="text" placeholder="Example: 3 min podcast, travel vlog, product video, normal photo..." />
+
+                <label>AI mode</label>
+                <div class="copilot-mode-grid">
+                  <button class="copilot-mode-chip active" type="button" data-mode="copilot">AI Copilot</button>
+                  <button class="copilot-mode-chip" type="button" data-mode="viral">Viral Reel AI</button>
+                  <button class="copilot-mode-chip" type="button" data-mode="highlights">Auto Highlight</button>
+                  <button class="copilot-mode-chip" type="button" data-mode="beat">Music Beat</button>
+                  <button class="copilot-mode-chip" type="button" data-mode="tracking">Face Tracking</button>
+                  <button class="copilot-mode-chip" type="button" data-mode="background">Background AI</button>
+                  <button class="copilot-mode-chip" type="button" data-mode="script">Script Writer</button>
+                  <button class="copilot-mode-chip" type="button" data-mode="translate">Translate + Dub</button>
+                  <button class="copilot-mode-chip" type="button" data-mode="thumbnail">Thumbnail AI</button>
+                  <button class="copilot-mode-chip" type="button" data-mode="analytics">AI Analytics</button>
+                  <button class="copilot-mode-chip wide" type="button" data-mode="chain">Prompt Chain AI</button>
+                </div>
+
+                <button id="copilotGenerateBtn" class="primary generate-button generate" type="button">
+                  <span class="copilot-button-label">Generate Creator Plan</span>
+                  <span class="button-loader" aria-hidden="true"></span>
+                </button>
+              </div>
+
+              <div class="copilot-output-card">
+                <div class="section-title">
+                  <h3 id="copilotResultTitle">AI plan output</h3>
+                  <p id="copilotStatus">Ready for prompt</p>
+                </div>
+                <div class="viral-score">
+                  <span>Viral Score</span>
+                  <strong id="copilotScore">--</strong>
+                </div>
+                <div id="copilotRecommendations" class="copilot-recommendations">
+                  <p>AI recommendations will appear here.</p>
+                </div>
+                <pre id="copilotJson" class="ai-test-output">Action JSON will appear here.</pre>
+              </div>
+            </div>
           </section>
 
           <section id="referenceMatch" class="reference-editor panel" data-page-section data-page="reference">
@@ -629,6 +683,7 @@
             <button type="button" data-tool="zoom"><strong>AI Highlights</strong><span>Find best moments</span></button>
             <button type="button"><strong>Convert to Reel</strong><span>9:16 vertical video</span></button>
             <button type="button" data-tool="music"><strong>AI Voiceover</strong><span>Text to speech narration</span></button>
+            <button type="button" data-jump-page="copilot"><strong>AI Copilot</strong><span>Score and plan your content</span></button>
           </section>
         </aside>
       </div>
