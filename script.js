@@ -240,7 +240,7 @@ function renderCaptions() {
 }
 
 function updateCaptionOverlay() {
-  if (!captionsToggle.checked) {
+  if (!captionsToggle.checked || !captions.length) {
     captionOverlay.style.display = "none";
     return;
   }
@@ -248,7 +248,7 @@ function updateCaptionOverlay() {
 
   const match = captions.findIndex((caption) => video.currentTime >= caption.start && video.currentTime <= caption.end);
   if (match >= 0) activeCaptionIndex = match;
-  captionOverlay.textContent = captions[activeCaptionIndex]?.text || "AI captions will appear here";
+  captionOverlay.textContent = captions[activeCaptionIndex]?.text || "";
 }
 
 function setGenerateLoading(isLoading) {
@@ -471,8 +471,8 @@ function showRenderedOutput(result, fallbackName = "Vixa AI render") {
   video.src = result.output_url;
   video.load();
   projectName.textContent = fallbackName;
-  captionOverlay.textContent = "Rendered output ready";
-  captionOverlay.style.display = "block";
+  captionOverlay.textContent = "";
+  captionOverlay.style.display = "none";
   if (downloadLink) {
     downloadLink.href = result.download_url || result.output_url;
     downloadLink.hidden = false;
@@ -484,7 +484,7 @@ function resetNewProject(options = {}) {
   const { scrollToEditor = true, navigateToEditor = true } = options;
   selectedFile = null;
   editPlan = makePlan(36);
-  captions = makeCaptions(editPlan, promptInput.value || "cinematic");
+  captions = [];
   activeCaptionIndex = 0;
 
   video.pause();
@@ -497,8 +497,12 @@ function resetNewProject(options = {}) {
 
   projectName.textContent = "Untitled Vixa project";
   statusText.textContent = "New project ready. Upload a video to start.";
-  captionOverlay.style.display = "block";
-  captionOverlay.textContent = "Upload a video to preview edits";
+  captionsToggle.checked = false;
+  zoomToggle.checked = false;
+  silenceToggle.checked = false;
+  musicToggle.checked = false;
+  captionOverlay.style.display = "none";
+  captionOverlay.textContent = "";
   mainVideoName.textContent = "No video selected";
   referenceVideoName.textContent = "No reference selected";
   referenceStatus.textContent = "Waiting for both videos";
@@ -813,9 +817,9 @@ async function generateReferenceEdit() {
 function applyServerPlan(serverPlan) {
   if (!serverPlan) return;
   editPlan = serverPlan.cuts || editPlan;
-  captions = Array.isArray(serverPlan.caption_items) && serverPlan.caption_items.length
+  captions = captionsToggle.checked && Array.isArray(serverPlan.caption_items) && serverPlan.caption_items.length
     ? serverPlan.caption_items
-    : serverPlan.captions
+    : captionsToggle.checked && serverPlan.captions
       ? editPlan
           .filter((clip) => clip.type === "keep")
           .slice(0, 4)
@@ -830,7 +834,8 @@ function applyServerPlan(serverPlan) {
 async function generatePlan() {
   if (!selectedFile) {
     statusText.textContent = "Upload a video first. This is a real renderer, not a slideshow demo.";
-    captionOverlay.textContent = "Choose a video file, then click Generate Video";
+    captionOverlay.style.display = "none";
+    captionOverlay.textContent = "";
     videoInput.focus();
     updateGenerateAvailability();
     return;
@@ -845,6 +850,10 @@ async function generatePlan() {
     const formData = new FormData();
     formData.append("video", selectedFile);
     formData.append("prompt", styledPrompt);
+    formData.append("captions", captionsToggle.checked ? "true" : "false");
+    formData.append("auto_zoom", zoomToggle.checked ? "true" : "false");
+    formData.append("remove_silence", silenceToggle.checked ? "true" : "false");
+    formData.append("background_music", musicToggle.checked ? "true" : "false");
 
     try {
       const response = await fetch("/edit", { method: "POST", body: formData });
@@ -857,12 +866,12 @@ async function generatePlan() {
       statusText.textContent = result.message || "AI edit generated";
     } catch (error) {
       editPlan = makePlan(video.duration);
-      captions = makeCaptions(editPlan, styledPrompt);
+      captions = captionsToggle.checked ? makeCaptions(editPlan, styledPrompt) : [];
       statusText.textContent = "Server render failed, showing browser preview plan";
     }
   } else {
     editPlan = makePlan(video.duration);
-    captions = makeCaptions(editPlan, styledPrompt);
+    captions = captionsToggle.checked ? makeCaptions(editPlan, styledPrompt) : [];
     statusText.textContent = "Open http://127.0.0.1:5050 to render with the backend.";
   }
 
@@ -888,7 +897,8 @@ videoInput.addEventListener("change", () => {
   video.src = URL.createObjectURL(file);
   projectName.textContent = file.name;
   statusText.textContent = "Video loaded";
-  captionOverlay.textContent = "Click generate AI edit";
+  captionOverlay.style.display = "none";
+  captionOverlay.textContent = "";
 });
 
 video.addEventListener("loadedmetadata", () => {

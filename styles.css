@@ -251,6 +251,10 @@ textarea {
   display: none !important;
 }
 
+.developer-panel {
+  display: none !important;
+}
+
 .page-panel {
   min-height: 520px;
 }

@@ -153,10 +153,19 @@ def _burn_captions_cv2(video_path, captions, ffmpeg):
     return final_video, True
 
 
-def process_video(video_path, prompt):
+def process_video(video_path, prompt, user_options=None):
     os.makedirs(OUTPUT_DIR, exist_ok=True)
+    user_options = user_options or {}
     settings = parse_prompt(prompt)
     actions = understand_prompt(prompt)
+    if "captions" in user_options:
+        actions["captions"] = bool(user_options["captions"])
+    if "remove_silence" in user_options:
+        actions["remove_silence"] = bool(user_options["remove_silence"])
+    if "background_music" in user_options:
+        actions["background_music"] = bool(user_options["background_music"])
+    if "auto_zoom" in user_options and not user_options["auto_zoom"]:
+        actions["zoom_style"] = "none"
     duration = ffprobe_duration(video_path)
     scene_analysis = analyze_scenes(video_path)
     silence_segments = detect_silence(video_path) if actions["remove_silence"] else []

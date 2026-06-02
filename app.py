@@ -52,6 +52,13 @@ def _has_ffmpeg():
     return has_ffmpeg()
 
 
+def _form_bool(name, default=False):
+    value = request.form.get(name)
+    if value is None:
+        return default
+    return str(value).lower() in {"1", "true", "yes", "on"}
+
+
 def _command_available(command):
     return shutil.which(command) is not None
 
@@ -806,8 +813,14 @@ def edit():
         return jsonify({"status": "error", "message": "Empty filename."}), 400
 
     upload_path = save_uploaded_file(file)
+    user_options = {
+        "captions": _form_bool("captions", False),
+        "auto_zoom": _form_bool("auto_zoom", False),
+        "remove_silence": _form_bool("remove_silence", False),
+        "background_music": _form_bool("background_music", False),
+    }
 
-    data = process_video(upload_path, prompt)
+    data = process_video(upload_path, prompt, user_options=user_options)
     if data.get("output_url"):
         filename = os.path.basename(data["output_url"])
         data["success"] = True

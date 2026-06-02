@@ -366,7 +366,7 @@
 
               <div class="card">
                 <h4>2. Describe Your Edit</h4>
-                <textarea id="prompt" rows="5">Make this into a short vertical reel, remove boring pauses, add bold captions, and highlight the most important moments.</textarea>
+                <textarea id="prompt" rows="5">Make this into a cinematic short reel with clean color and smooth pacing.</textarea>
               </div>
 
               <div class="card">
@@ -381,7 +381,7 @@
               </div>
             </div>
 
-            <section class="ai-brain-panel">
+            <section class="ai-brain-panel developer-panel">
               <div>
                 <span class="ai-live-dot"></span>
                 <div>
@@ -415,7 +415,7 @@
               <div class="stage-wrap">
                 <div id="stage" class="stage vertical">
                   <video id="video" controls playsinline></video>
-                  <div id="captionOverlay" class="caption-overlay">Upload a video to preview edits</div>
+                  <div id="captionOverlay" class="caption-overlay"></div>
                   <div id="focusFrame" class="focus-frame"></div>
                 </div>
               </div>
@@ -423,7 +423,7 @@
             </article>
 
             <article class="panel tools-panel">
-              <h3>Quick AI Tools</h3>
+              <h3>Optional tools</h3>
               <div class="tool-grid">
                 <button class="tool-card" type="button" data-tool="captions">Auto Subtitle</button>
                 <button class="tool-card" type="button" data-tool="silence">Remove Silence</button>
@@ -431,9 +431,9 @@
                 <button class="tool-card" type="button" data-tool="music">AI Voiceover</button>
               </div>
               <h3>Smart controls</h3>
-              <label class="toggle"><input id="captionsToggle" type="checkbox" checked /> Captions</label>
-              <label class="toggle"><input id="zoomToggle" type="checkbox" checked /> Auto zoom</label>
-              <label class="toggle"><input id="silenceToggle" type="checkbox" checked /> Remove silence</label>
+              <label class="toggle"><input id="captionsToggle" type="checkbox" /> Add captions</label>
+              <label class="toggle"><input id="zoomToggle" type="checkbox" /> Auto zoom</label>
+              <label class="toggle"><input id="silenceToggle" type="checkbox" /> Remove silence</label>
               <label class="toggle"><input id="musicToggle" type="checkbox" /> Background music</label>
               <h3>Output</h3>
               <div class="metric"><span>Duration</span><strong id="durationMetric">--</strong></div>
@@ -442,7 +442,7 @@
             </article>
           </section>
 
-          <section class="timeline-panel panel" data-page-section data-page="editor">
+          <section class="timeline-panel panel developer-panel" data-page-section data-page="editor">
             <div class="section-title">
               <div>
                 <h3>AI edit plan</h3>
@@ -456,7 +456,7 @@
             <div id="timeline" class="timeline"></div>
           </section>
 
-          <section class="panel ai-intelligence-panel" data-page-section data-page="editor">
+          <section class="panel ai-intelligence-panel developer-panel" data-page-section data-page="editor">
             <div class="section-title">
               <div>
                 <h3>AI Intelligence</h3>
@@ -557,7 +557,7 @@
             </div>
           </section>
 
-          <section class="panel captions-panel" data-page-section data-page="subtitles editor">
+          <section class="panel captions-panel" data-page-section data-page="subtitles">
             <h3>Captions</h3>
             <div id="captionsList" class="captions-list"></div>
           </section>
