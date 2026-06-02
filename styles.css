@@ -118,8 +118,6 @@ textarea {
 
 .brand p,
 .profile-card small,
-.storage-card small,
-.storage-card span,
 .upgrade-card p {
   color: var(--muted);
 }
@@ -196,18 +194,6 @@ textarea {
 .upgrade-card button {
   width: 100%;
   min-height: 38px;
-}
-
-.storage-card {
-  display: grid;
-  gap: 8px;
-}
-
-.storage-card div:first-child {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 13px;
 }
 
 .storage-bar {
@@ -1344,6 +1330,40 @@ video {
   padding: 18px;
 }
 
+.photo-pipeline {
+  display: grid;
+  gap: 9px;
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid rgba(104, 232, 255, 0.18);
+  border-radius: var(--radius);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.photo-pipeline strong {
+  margin-bottom: 4px;
+}
+
+.photo-pipeline p {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--muted);
+}
+
+.photo-pipeline span {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--purple), var(--blue));
+  color: white;
+  font-size: 12px;
+  font-weight: 900;
+}
+
 .style-transform-grid,
 .copilot-grid,
 .voice-grid {
@@ -1454,6 +1474,50 @@ video {
   font-size: 30px;
   font-weight: 950;
   color: var(--cyan);
+}
+
+.asset-storage-panel {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.025)),
+    rgba(10, 18, 34, 0.84);
+}
+
+.asset-storage-panel > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.asset-storage-panel span {
+  color: var(--muted);
+}
+
+.asset-storage-breakdown {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.asset-storage-breakdown p {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.asset-storage-breakdown span,
+.asset-storage-breakdown strong {
+  display: block;
+}
+
+.asset-storage-breakdown strong {
+  margin-top: 6px;
 }
 
 .engine-summary {
@@ -1993,6 +2057,7 @@ video {
   .os-mode-grid,
   .tool-os-grid,
   .asset-grid,
+  .asset-storage-breakdown,
   .engine-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2089,6 +2154,7 @@ video {
   .os-mode-grid,
   .tool-os-grid,
   .asset-grid,
+  .asset-storage-breakdown,
   .engine-summary,
   .engine-grid,
   .style-choice-grid,

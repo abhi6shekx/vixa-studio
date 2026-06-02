@@ -35,12 +35,6 @@
         <button type="button">Upgrade Now</button>
       </section>
 
-      <section class="storage-card">
-        <div><span>Storage</span><span>24.6 GB / 100 GB</span></div>
-        <div class="storage-bar"><span></span></div>
-        <small>24%</small>
-      </section>
-
       <section class="profile-card">
         <span class="avatar">A</span>
         <div>
@@ -234,6 +228,19 @@
               <article><strong>AI Images</strong><span>8 outputs</span><small>Style transforms and thumbnail bases</small></article>
               <article><strong>Voiceovers</strong><span>5 tracks</span><small>Generated narration files</small></article>
               <article><strong>Exports</strong><span>18 renders</span><small>Final reels, drafts, and packages</small></article>
+            </div>
+            <div class="asset-storage-panel">
+              <div>
+                <span>Workspace Storage</span>
+                <strong>24.6 GB / 100 GB</strong>
+              </div>
+              <div class="storage-bar"><span></span></div>
+              <div class="asset-storage-breakdown">
+                <p><span>Uploads</span><strong>14.2 GB</strong></p>
+                <p><span>AI Outputs</span><strong>6.8 GB</strong></p>
+                <p><span>Voice + Captions</span><strong>1.1 GB</strong></p>
+                <p><span>Projects</span><strong>2.5 GB</strong></p>
+              </div>
             </div>
           </section>
 
@@ -468,6 +475,7 @@
             <div class="section-title stacked">
               <span>Photo to Video AI</span>
               <h3>Animate still images into cinematic AI videos</h3>
+              <p>Current free mode renders real MP4 motion locally with FFmpeg. Future cloud mode can send heavy AnimateDiff / Stable Video Diffusion jobs to Google Cloud GPU.</p>
             </div>
 
             <div class="photo-video-grid">
@@ -517,6 +525,13 @@
                   <span class="photo-button-label">Generate Video from Photos</span>
                   <span class="button-loader" aria-hidden="true"></span>
                 </button>
+                <div class="photo-pipeline">
+                  <strong>Render pipeline</strong>
+                  <p><span>1</span> Upload photo</p>
+                  <p><span>2</span> Choose motion + prompt</p>
+                  <p><span>3</span> Local FFmpeg motion render</p>
+                  <p><span>4</span> Optional Google Cloud GPU for heavy generative AI</p>
+                </div>
               </div>
 
               <div class="photo-preview-card">
