@@ -1369,7 +1369,8 @@ video {
 
 .create-os-panel,
 .tools-os-panel,
-.assets-os-panel {
+.assets-os-panel,
+.engines-panel {
   min-height: 520px;
   background:
     radial-gradient(circle at 15% 0%, rgba(73, 184, 255, 0.11), transparent 32%),
@@ -1453,6 +1454,92 @@ video {
   font-size: 30px;
   font-weight: 950;
   color: var(--cyan);
+}
+
+.engine-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.engine-summary div,
+.engine-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.025)),
+    rgba(10, 18, 34, 0.84);
+}
+
+.engine-summary div {
+  padding: 16px;
+}
+
+.engine-summary span,
+.engine-summary strong {
+  display: block;
+}
+
+.engine-summary span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.engine-summary strong {
+  margin-top: 8px;
+  font-size: 24px;
+}
+
+.engine-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.engine-card {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+}
+
+.engine-card strong,
+.engine-card span,
+.engine-card b,
+.engine-card p,
+.engine-card small {
+  display: block;
+}
+
+.engine-card span,
+.engine-card p,
+.engine-card small {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.engine-card b {
+  width: max-content;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: #dffdf7;
+  background: rgba(62, 227, 143, 0.18);
+}
+
+.engine-card.missing b {
+  color: #ffe0a8;
+  background: rgba(255, 200, 87, 0.16);
+}
+
+.engine-card.ready {
+  border-color: rgba(62, 227, 143, 0.24);
+}
+
+.engine-card.missing {
+  border-color: rgba(255, 200, 87, 0.2);
 }
 
 .copilot-mode-grid {
@@ -1905,7 +1992,8 @@ video {
 
   .os-mode-grid,
   .tool-os-grid,
-  .asset-grid {
+  .asset-grid,
+  .engine-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -2001,6 +2089,8 @@ video {
   .os-mode-grid,
   .tool-os-grid,
   .asset-grid,
+  .engine-summary,
+  .engine-grid,
   .style-choice-grid,
   .copilot-mode-grid,
   .voice-selectors,

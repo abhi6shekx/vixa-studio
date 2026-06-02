@@ -51,6 +51,112 @@ def _has_ffmpeg():
     return has_ffmpeg()
 
 
+def _command_available(command):
+    return shutil.which(command) is not None
+
+
+def _module_available(name):
+    try:
+        __import__(name)
+    except ImportError:
+        return False
+    return True
+
+
+def free_ai_engines():
+    ai = ai_health()
+    engines = [
+        {
+            "id": "assistant",
+            "name": "Vixa Assistant Brain",
+            "engine": "Local prompt planner / Ollama-ready",
+            "ready": True,
+            "tasks": ["tool routing", "prompt chain", "viral advice", "script planning"],
+            "setup": "Optional upgrade: install Ollama for a stronger local LLM.",
+        },
+        {
+            "id": "video",
+            "name": "Video Editing AI",
+            "engine": "FFmpeg + OpenCV",
+            "ready": _has_ffmpeg() and cv2 is not None,
+            "tasks": ["cuts", "reel convert", "auto zoom", "highlight detection", "render"],
+            "setup": "Install ffmpeg and opencv-python.",
+        },
+        {
+            "id": "subtitles",
+            "name": "Subtitles AI",
+            "engine": "Whisper",
+            "ready": ai["whisper"],
+            "tasks": ["transcription", "captions", "multilingual subtitles"],
+            "setup": "Install openai-whisper and torch locally.",
+        },
+        {
+            "id": "voice",
+            "name": "Voice AI",
+            "engine": "macOS say / Piper / Coqui-ready",
+            "ready": _command_available("say") or _command_available("piper") or _module_available("TTS"),
+            "tasks": ["text to speech", "voiceover", "language voices"],
+            "setup": "Free local: macOS say works now. Better voices: install Piper or Coqui TTS.",
+        },
+        {
+            "id": "image",
+            "name": "Image AI",
+            "engine": "OpenCV stylizer / Stable Diffusion-ready",
+            "ready": cv2 is not None,
+            "tasks": ["style transform", "anime/cartoon look", "reference color transfer"],
+            "setup": "For true generation install Stable Diffusion/ComfyUI or Diffusers.",
+        },
+        {
+            "id": "photo_video",
+            "name": "Photo to Video AI",
+            "engine": "FFmpeg motion / AnimateDiff-ready",
+            "ready": _has_ffmpeg(),
+            "tasks": ["slow zoom", "pan", "parallax-like motion", "MP4 render"],
+            "setup": "For generative motion install AnimateDiff or Stable Video Diffusion locally.",
+        },
+        {
+            "id": "beat",
+            "name": "Music Beat AI",
+            "engine": "Librosa-ready",
+            "ready": _module_available("librosa"),
+            "tasks": ["beat detection", "music sync cuts", "transition timing"],
+            "setup": "Install librosa for beat detection.",
+        },
+        {
+            "id": "lipsync",
+            "name": "Lip Sync AI",
+            "engine": "Wav2Lip-ready",
+            "ready": os.path.isdir(os.path.join(BASE_DIR, "Wav2Lip")) or _command_available("wav2lip"),
+            "tasks": ["dub sync", "mouth sync", "voice to face alignment"],
+            "setup": "Install Wav2Lip locally and point Vixa to the folder.",
+        },
+        {
+            "id": "background",
+            "name": "Smart Background AI",
+            "engine": "rembg / Segment Anything-ready",
+            "ready": _module_available("rembg") or _module_available("segment_anything"),
+            "tasks": ["background remove", "subject cutout", "blur", "replace"],
+            "setup": "Install rembg for free background removal; SAM for advanced masks.",
+        },
+        {
+            "id": "local_llm",
+            "name": "Local LLM",
+            "engine": "Ollama",
+            "ready": _command_available("ollama"),
+            "tasks": ["strong assistant brain", "script writing", "tool selection"],
+            "setup": "Install Ollama and pull a local model.",
+        },
+    ]
+    ready_count = sum(1 for engine in engines if engine["ready"])
+    return {
+        "status": "ok",
+        "runtime": "vercel" if os.environ.get("VERCEL") else "local",
+        "ready": ready_count,
+        "total": len(engines),
+        "engines": engines,
+    }
+
+
 def _target_size(aspect_ratio):
     if aspect_ratio == "9:16":
         return 1080, 1920
@@ -615,6 +721,7 @@ def home():
 @app.get("/tools")
 @app.get("/assets")
 @app.get("/assistant")
+@app.get("/engines")
 @app.get("/editor")
 @app.get("/reference-match")
 @app.get("/photo-to-video")
@@ -815,6 +922,11 @@ def ai_status():
         "silence_ai": ai["silence_ai"],
         "ffmpeg": _has_ffmpeg(),
     })
+
+
+@app.get("/api/ai/engines")
+def ai_engines():
+    return jsonify(free_ai_engines())
 
 
 @app.post("/api/ai/prompt")

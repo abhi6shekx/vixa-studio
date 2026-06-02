@@ -94,6 +94,9 @@ const copilotStatus = document.querySelector("#copilotStatus");
 const copilotScore = document.querySelector("#copilotScore");
 const copilotRecommendations = document.querySelector("#copilotRecommendations");
 const copilotJson = document.querySelector("#copilotJson");
+const engineReadyCount = document.querySelector("#engineReadyCount");
+const engineRuntime = document.querySelector("#engineRuntime");
+const engineGrid = document.querySelector("#engineGrid");
 
 const pageRoutes = {
   "/": "dashboard",
@@ -101,6 +104,7 @@ const pageRoutes = {
   "/tools": "tools",
   "/assets": "assets",
   "/assistant": "assistant",
+  "/engines": "engines",
   "/copilot": "copilot",
   "/editor": "editor",
   "/reference-match": "reference",
@@ -297,6 +301,37 @@ async function refreshAiSettings() {
     settingsOpenAi.textContent = "--";
     settingsWhisper.textContent = "--";
     settingsSceneAi.textContent = "--";
+  }
+}
+
+function renderEngines(data) {
+  if (!engineGrid) return;
+  engineReadyCount.textContent = `${data.ready}/${data.total}`;
+  engineRuntime.textContent = data.runtime === "vercel" ? "Vercel lightweight" : "Local Mac";
+  engineGrid.innerHTML = (data.engines || [])
+    .map((engine) => `
+      <article class="engine-card ${engine.ready ? "ready" : "missing"}">
+        <div>
+          <strong>${engine.name}</strong>
+          <span>${engine.engine}</span>
+        </div>
+        <b>${engine.ready ? "Ready" : "Setup needed"}</b>
+        <p>${(engine.tasks || []).join(" • ")}</p>
+        <small>${engine.setup}</small>
+      </article>
+    `)
+    .join("");
+}
+
+async function refreshFreeEngines() {
+  if (!engineGrid) return;
+  try {
+    const response = await fetch("/api/ai/engines");
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || "Engine scan failed");
+    renderEngines(data);
+  } catch (error) {
+    engineGrid.innerHTML = `<article class="engine-card missing"><strong>Engine scan failed</strong><span>${error.message || "Backend unavailable"}</span></article>`;
   }
 }
 
@@ -1064,3 +1099,4 @@ resetNewProject({ scrollToEditor: false, navigateToEditor: false });
 showPage(pageRoutes[location.pathname] || "dashboard", { push: false, instant: true });
 checkBackendHealth();
 refreshAiSettings();
+refreshFreeEngines();
