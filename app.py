@@ -3,6 +3,7 @@ import shutil
 import subprocess
 import uuid
 import wave
+import asyncio
 
 try:
     from dotenv import load_dotenv
@@ -429,6 +430,48 @@ def _voice_settings(language, voice):
     return mac_voice, rate
 
 
+EDGE_VOICE_MAP = {
+    "hindi_male": "hi-IN-MadhurNeural",
+    "hindi_female": "hi-IN-SwaraNeural",
+    "english_india_male": "en-IN-PrabhatNeural",
+    "english_india_female": "en-IN-NeerjaNeural",
+    "english_us_male": "en-US-GuyNeural",
+    "english_us_female": "en-US-JennyNeural",
+    "marathi_male": "mr-IN-ManoharNeural",
+    "marathi_female": "mr-IN-AarohiNeural",
+}
+
+
+def _edge_voice_key(language, voice):
+    voice = (voice or "").lower()
+    language = (language or "").lower()
+    if voice in EDGE_VOICE_MAP:
+        return voice
+    if language == "hindi":
+        return "hindi_male" if "male" in voice or "cinematic" in voice else "hindi_female"
+    if language == "marathi":
+        return "marathi_male" if "male" in voice or "cinematic" in voice else "marathi_female"
+    if language == "english":
+        if "us" in voice:
+            return "english_us_male" if "male" in voice else "english_us_female"
+        return "english_india_male" if "male" in voice or "cinematic" in voice else "english_india_female"
+    return "english_india_female"
+
+
+async def _generate_edge_tts_async(text, voice_name, output_path, rate="+0%"):
+    import edge_tts
+    communicate = edge_tts.Communicate(text, voice_name, rate=rate)
+    await communicate.save(output_path)
+
+
+def _generate_edge_tts(text, language, voice, emotion, output_path):
+    voice_key = _edge_voice_key(language, voice)
+    voice_name = EDGE_VOICE_MAP[voice_key]
+    rate = "+12%" if voice in {"anime", "excited"} or emotion == "excited" else "-8%" if "cinematic" in voice or "sad" in emotion else "+0%"
+    asyncio.run(_generate_edge_tts_async(text, voice_name, output_path, rate=rate))
+    return voice_key, voice_name
+
+
 def _write_fallback_tone(path, duration=1.4):
     sample_rate = 22050
     frames = int(sample_rate * duration)
@@ -453,8 +496,21 @@ def generate_tts_audio(text, language, voice, emotion):
     ffmpeg = ffmpeg_executable()
     mac_voice, rate = _voice_settings(language, voice)
     spoken_text = f"{emotion}. {text}" if emotion and emotion != "neutral" else text
+    selected_voice = voice
+    engine = "fallback-tone"
 
-    if say_bin:
+    if _module_available("edge_tts"):
+        try:
+            voice_key, edge_voice = _generate_edge_tts(spoken_text, language, voice, emotion, mp3_path)
+            output_path = mp3_path
+            output_name = os.path.basename(mp3_path)
+            selected_voice = voice_key
+            engine = f"edge-tts:{edge_voice}"
+        except Exception as error:
+            if not say_bin:
+                return {"status": "error", "message": f"Edge TTS failed: {str(error)[-500:]}"}
+
+    if engine == "fallback-tone" and say_bin:
         result = subprocess.run([say_bin, "-v", mac_voice, "-r", rate, "-o", aiff_path, spoken_text], capture_output=True, text=True)
         if result.returncode != 0:
             result = subprocess.run([say_bin, "-r", rate, "-o", aiff_path, spoken_text], capture_output=True, text=True)
@@ -462,12 +518,13 @@ def generate_tts_audio(text, language, voice, emotion):
             return {"status": "error", "message": result.stderr[-600:] or "Local TTS failed."}
         output_path = aiff_path
         output_name = os.path.basename(aiff_path)
+        engine = f"macos-say:{mac_voice}"
         if ffmpeg:
             convert = subprocess.run([ffmpeg, "-y", "-i", aiff_path, "-codec:a", "libmp3lame", "-q:a", "3", mp3_path], capture_output=True, text=True)
             if convert.returncode == 0:
                 output_path = mp3_path
                 output_name = os.path.basename(mp3_path)
-    else:
+    elif engine == "fallback-tone":
         wav_path = os.path.join(OUTPUT_DIR, f"{base_name}.wav")
         _write_fallback_tone(wav_path)
         output_path = wav_path
@@ -481,9 +538,9 @@ def generate_tts_audio(text, language, voice, emotion):
         "download_url": f"/download/{output_name}",
         "meta": {
             "language": language,
-            "voice": voice,
+            "voice": selected_voice,
             "emotion": emotion,
-            "engine": "macos-say" if say_bin else "fallback-tone",
+            "engine": engine,
             "filename": os.path.basename(output_path),
         },
     }

@@ -5,3 +5,4 @@ openai-whisper
 torch
 openai
 python-dotenv
+edge-tts
