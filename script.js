@@ -104,7 +104,7 @@ const pageRoutes = {
   "/tools": "tools",
   "/assets": "assets",
   "/assistant": "assistant",
-  "/engines": "engines",
+  "/admin/engines": "engines",
   "/copilot": "copilot",
   "/editor": "editor",
   "/reference-match": "reference",

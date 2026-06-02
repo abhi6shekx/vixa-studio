@@ -25,7 +25,6 @@
         <button class="nav-item" type="button" data-page="assets"><span>Assets</span></button>
         <button class="nav-item" type="button" data-page="templates"><span>Templates</span></button>
         <button class="nav-item" type="button" data-page="assistant"><span>Vixa Assistant</span></button>
-        <button class="nav-item" type="button" data-page="engines"><span>Free AI Engines</span></button>
         <button class="nav-item" type="button" data-page="settings"><span>Settings</span></button>
       </nav>
 
@@ -188,13 +187,14 @@
               <p>Vixa is organized like a creator workstation: video, image, audio, assistant, and optimization tools are separated but connected.</p>
             </div>
             <div class="tool-os-grid">
-              <button type="button" data-jump-page="engines"><strong>Free AI Engines</strong><span>See local/open-source AI stack status</span></button>
               <button type="button" data-jump-page="editor"><strong>AI Edit</strong><span>Prompt based video editing</span></button>
               <button type="button" data-jump-page="reference"><strong>Reference Match</strong><span>Match tone, cuts, zooms, captions</span></button>
               <button type="button" data-jump-page="photo"><strong>Photo to Video</strong><span>Animate stills into motion clips</span></button>
               <button type="button" data-jump-page="style"><strong>Style Transform</strong><span>Normal photo to stylized AI output</span></button>
               <button type="button" data-jump-page="voice"><strong>Voice Studio</strong><span>Text to speech in multiple languages</span></button>
-              <button type="button" data-jump-page="subtitles"><strong>Auto Subtitle</strong><span>Whisper captions and caption plan</span></button>
+              <button type="button" data-jump-page="subtitles"><strong>Auto Subtitle</strong><span>Generate captions automatically</span></button>
+              <button type="button" data-jump-page="assistant" data-copilot-preset="translate"><strong>Lip Sync</strong><span>Dub and sync narration plans</span></button>
+              <button type="button" data-jump-page="assistant" data-copilot-preset="beat"><strong>Music Sync</strong><span>Cut and transition with the beat</span></button>
               <button type="button" data-jump-page="assistant" data-copilot-preset="viral"><strong>Viral Reel AI</strong><span>Hook, retention, CTA score</span></button>
               <button type="button" data-jump-page="assistant" data-copilot-preset="thumbnail"><strong>Thumbnail AI</strong><span>Frame, title, click optimization</span></button>
               <button type="button" data-jump-page="assistant" data-copilot-preset="chain"><strong>Prompt Chain AI</strong><span>One prompt to full content pipeline</span></button>
@@ -203,9 +203,9 @@
 
           <section class="panel engines-panel" data-page-section data-page="engines">
             <div class="section-title stacked">
-              <span>Free AI Stack</span>
-              <h3>Multiple local AI engines, one Vixa workflow</h3>
-              <p>Vixa uses separate free/open-source engines for video, image, voice, subtitles, music, background, lip sync, and assistant planning.</p>
+              <span>Developer Only</span>
+              <h3>Engine Control</h3>
+              <p>This technical page is hidden from normal users. It helps you check backend AI modules while users only see simple creation tools.</p>
             </div>
             <div class="engine-summary">
               <div><span>Ready Engines</span><strong id="engineReadyCount">--</strong></div>

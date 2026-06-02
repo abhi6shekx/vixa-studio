@@ -778,7 +778,7 @@ def home():
 @app.get("/tools")
 @app.get("/assets")
 @app.get("/assistant")
-@app.get("/engines")
+@app.get("/admin/engines")
 @app.get("/editor")
 @app.get("/reference-match")
 @app.get("/photo-to-video")
