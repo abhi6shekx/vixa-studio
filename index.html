@@ -1,771 +1,360 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vixa Studio</title>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <aside class="sidebar">
-      <div class="brand">
-        <img class="brand-logo" src="assets/vixa-logo.png" alt="Vixa Studio logo" />
-        <div>
-          <h1>Vixa Studio</h1>
-          <p>AI Video Studio</p>
-        </div>
-      </div>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Vixa Studio AI Image</title>
+  <style>
+    body {
+      background: #070814;
+      color: white;
+      font-family: Inter, Arial, sans-serif;
+      min-height: 100vh;
+      margin: 0;
+      padding: 32px;
+    }
 
-      <button id="newProjectBtn" class="new-project" type="button">+ New Project</button>
+    .container {
+      max-width: 780px;
+      margin: auto;
+    }
 
-      <nav class="nav-list" aria-label="Primary navigation">
-        <button class="nav-item active" type="button" data-page="dashboard"><span>Home</span></button>
-        <button class="nav-item" type="button" data-page="create"><span>Create</span></button>
-        <button class="nav-item" type="button" data-page="tools"><span>AI Tools</span></button>
-        <button class="nav-item" type="button" data-page="assets"><span>Assets</span></button>
-        <button class="nav-item" type="button" data-page="templates"><span>Templates</span></button>
-        <button class="nav-item" type="button" data-page="assistant"><span>Vixa Assistant</span></button>
-        <button class="nav-item" type="button" data-page="settings"><span>Settings</span></button>
-      </nav>
+    .panel {
+      background: #10172f;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.24);
+    }
 
-      <section class="upgrade-card">
-        <strong>Upgrade to Pro</strong>
-        <p>Unlock all features, faster renders, unlimited exports and more.</p>
-        <button type="button">Upgrade Now</button>
-      </section>
+    h1 {
+      margin-top: 0;
+      font-size: 2rem;
+    }
 
-      <section class="profile-card">
-        <span class="avatar">A</span>
-        <div>
-          <strong>Anarn</strong>
-          <small>Pro Plan</small>
-        </div>
-      </section>
-    </aside>
+    label,
+    .note {
+      color: #b0b8d8;
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+    }
 
-    <main id="top" class="main">
-      <header class="topbar">
-        <label class="search-box">
-          <span>⌕</span>
-          <input type="search" placeholder="Search projects, templates..." />
-          <kbd>⌘ K</kbd>
+    textarea {
+      width: 100%;
+      min-height: 140px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 18px;
+      background: #0f1b35;
+      color: white;
+      padding: 16px;
+      font-size: 1rem;
+      resize: vertical;
+    }
+
+    .quality-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin: 18px 0;
+    }
+
+    .quality-option {
+      background: #131d38;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 16px;
+      cursor: pointer;
+      transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .quality-option input {
+      display: none;
+    }
+
+    .quality-option.selected {
+      border-color: #7b2ff7;
+      transform: translateY(-1px);
+    }
+
+    .quality-option strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 1rem;
+    }
+
+    button {
+      width: 100%;
+      border: none;
+      border-radius: 16px;
+      padding: 16px;
+      margin-top: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, #7b2ff7, #b14cff);
+      color: white;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .status {
+      margin: 16px 0 0;
+      color: #d1d9ff;
+      min-height: 22px;
+    }
+
+    .result-preview {
+      margin-top: 24px;
+      border-radius: 22px;
+      overflow: hidden;
+      background: #0c1730;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .result-preview img {
+      display: block;
+      width: 100%;
+      max-height: 520px;
+      object-fit: contain;
+    }
+
+    .history {
+      margin-top: 32px;
+    }
+
+    .history h2 {
+      margin-bottom: 14px;
+      font-size: 1.2rem;
+    }
+
+    .history-list {
+      display: grid;
+      gap: 18px;
+    }
+
+    .history-card {
+      display: grid;
+      grid-template-columns: 120px 1fr auto;
+      gap: 14px;
+      align-items: start;
+      padding: 18px;
+      background: #0d1732;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .history-card img {
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 14px;
+      background: #060b18;
+    }
+
+    .history-meta {
+      display: grid;
+      gap: 10px;
+    }
+
+    .history-meta p {
+      margin: 0;
+      line-height: 1.5;
+      color: #c5cbe3;
+      font-size: 0.95rem;
+      word-break: break-word;
+    }
+
+    .history-meta time {
+      color: #8b95b8;
+      font-size: 0.88rem;
+    }
+
+    .history-actions button {
+      width: auto;
+      padding: 10px 16px;
+      margin: 0;
+      background: rgba(255, 255, 255, 0.06);
+      color: white;
+    }
+
+    .history-actions button:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .note.small {
+      font-size: 0.88rem;
+      margin-top: 10px;
+      color: #8891b8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="panel">
+      <h1>Vixa Studio Image AI</h1>
+      <label for="prompt">Describe the image you want</label>
+      <textarea id="prompt" placeholder="A cinematic portrait of a cyberpunk fox in neon rain"></textarea>
+
+      <div class="quality-row">
+        <label class="quality-option selected" data-value="fast">
+          <input type="radio" name="quality" value="fast" checked />
+          <strong>Fast</strong>
+          ~0.2 credit
         </label>
-        <div class="topbar-actions">
-          <div id="backendStatus" class="backend-status checking"><span></span><strong>Checking AI Engine</strong></div>
-          <div class="credits"><span>⚡</span><small>Credits</small><strong>12,450</strong></div>
-          <button class="icon-button" type="button">◔</button>
-          <button class="icon-button" type="button">?</button>
-          <button class="icon-button" type="button">☾</button>
-          <span class="user-avatar">A</span>
-        </div>
-      </header>
-
-      <div class="dashboard-layout">
-        <section class="dashboard-main">
-          <section class="hero" data-page-section data-page="dashboard">
-            <div class="hero-copy">
-              <span>Create. Edit. Inspire.</span>
-              <h2>AI Video Studio</h2>
-              <p>Turn your ideas into cinematic videos with the power of AI.</p>
-              <div class="hero-tags">
-                <b>AI Powered</b>
-                <b>Smart Editing</b>
-                <b>Lightning Fast</b>
-              </div>
-              <div class="hero-actions">
-                <button id="topGenerateBtn" class="primary" type="button">Start New Project</button>
-                <button class="secondary" type="button" data-jump-page="assistant">AI Assistant</button>
-              </div>
-            </div>
-            <button class="play-button" type="button" aria-label="Preview Vixa Studio">▶</button>
-          </section>
-
-          <section class="steps-panel" data-page-section data-page="dashboard">
-            <div class="section-title">
-              <h3>Create with AI in 3 Simple Steps</h3>
-              <span>Hide</span>
-            </div>
-            <div class="steps-layout">
-              <article class="step-card">
-                <span class="step-icon">1</span>
-                <h4>Upload Media</h4>
-                <p>Upload your video or audio file to get started.</p>
-                <small>Supports MP4, MOV, AVI...</small>
-              </article>
-              <span class="step-arrow">→</span>
-              <article class="step-card">
-                <span class="step-icon">2</span>
-                <h4>Describe Your Edit</h4>
-                <p>Tell AI what you want. Be specific or creative.</p>
-                <small>Cinematic reel with subtitles and slow zoom.</small>
-              </article>
-              <span class="step-arrow">→</span>
-              <article class="step-card">
-                <span class="step-icon">3</span>
-                <h4>Generate Video</h4>
-                <p>AI will edit your video and make it stunning.</p>
-                <small>Ready in a few minutes.</small>
-              </article>
-              <aside class="prompt-examples">
-                <h4>Try Example Prompts</h4>
-                <button type="button" data-template="Cinematic travel reel with subtitles">Cinematic travel reel with subtitles</button>
-                <button type="button" data-template="Remove silence and make it dramatic">Remove silence and make it dramatic</button>
-                <button type="button" data-template="Motivational short with captions">Motivational short with captions</button>
-                <button type="button" data-template="Anime edit with beats and zoom">Anime edit with beats and zoom</button>
-              </aside>
-            </div>
-          </section>
-
-          <section class="content-row" data-page-section data-page="dashboard">
-            <article class="panel">
-              <div class="section-title">
-                <h3>Popular Templates</h3>
-                <button type="button" class="text-link">View all</button>
-              </div>
-              <div class="template-strip">
-                <button class="template-tile tile-cinematic" type="button" data-template="Make this a cinematic product teaser with premium captions."><span></span><strong>Cinematic</strong><small>16:9</small></button>
-                <button class="template-tile tile-dramatic" type="button" data-template="Make this dramatic with moody color and slow push-in."><span></span><strong>Dramatic</strong><small>16:9</small></button>
-                <button class="template-tile tile-reel" type="button" data-template="Create a viral short with fast pacing, bold captions, and a strong hook."><span></span><strong>Reel / Shorts</strong><small>9:16</small></button>
-                <button class="template-tile tile-anime" type="button" data-template="Turn this into an anime-inspired highlight reel with dramatic color and movement."><span></span><strong>Anime Edit</strong><small>16:9</small></button>
-              </div>
-            </article>
-
-            <article class="panel">
-              <div class="section-title">
-                <h3>Recent Projects</h3>
-                <button type="button" class="text-link">View all</button>
-              </div>
-              <div class="project-strip">
-                <article class="project-tile tile-dramatic"><span>00:45</span><strong>Cinematic Reel</strong><small>May 25, 2025 · 1080p</small></article>
-                <article class="project-tile tile-anime"><span>00:30</span><strong>Anime Edit</strong><small>May 24, 2025 · 1080p</small></article>
-                <article class="project-tile tile-cinematic"><span>01:20</span><strong>Travel Vlog</strong><small>May 23, 2025 · 4K</small></article>
-                <article class="project-tile tile-reel"><span>00:28</span><strong>Motivation Short</strong><small>May 22, 2025 · 1080p</small></article>
-              </div>
-            </article>
-          </section>
-
-          <section class="content-row overview-row" data-page-section data-page="dashboard">
-            <article class="panel overview-panel">
-              <h3>Your Studio Overview</h3>
-              <div class="overview-grid">
-                <div><span>📁</span><small>Total Projects</small><strong>28</strong><em>↗ 12% this month</em></div>
-                <div><span>▶</span><small>Videos Created</small><strong>47</strong><em>↗ 18% this month</em></div>
-                <div><span>◷</span><small>Hours Saved</small><strong>36.5</strong><em>↗ 24% this month</em></div>
-                <div><span>✦</span><small>AI Edits Used</small><strong>126</strong><em>↗ 32% this month</em></div>
-                <div><span>▰</span><small>Storage Used</small><strong>24.6 GB</strong><em>24% of 100 GB</em></div>
-              </div>
-            </article>
-            <article class="panel activity-panel">
-              <h3>Activity Feed</h3>
-              <p>Cinematic Reel completed <span>2 minutes ago</span></p>
-              <p>Anime Edit exported <span>15 minutes ago</span></p>
-              <p>Auto subtitles generated <span>32 minutes ago</span></p>
-              <p>Silence removed <span>1 hour ago</span></p>
-            </article>
-          </section>
-
-          <section class="panel create-os-panel" data-page-section data-page="create">
-            <div class="section-title stacked">
-              <span>Creation OS</span>
-              <h3>Start with what you want to make</h3>
-              <p>Choose a creation mode. Vixa opens the right AI workflow instead of dumping every editor control on one screen.</p>
-            </div>
-            <div class="os-mode-grid">
-              <button type="button" data-jump-page="editor"><strong>Video</strong><span>Prompt edit, reels, cuts, subtitles</span></button>
-              <button type="button" data-jump-page="style"><strong>Image</strong><span>Photo magic, style transform, thumbnail base</span></button>
-              <button type="button" data-jump-page="voice"><strong>Audio</strong><span>Voiceover, narration, language voices</span></button>
-              <button type="button" data-jump-page="photo"><strong>Motion</strong><span>Photo to video, pan, zoom, parallax</span></button>
-              <button type="button" data-jump-page="reference"><strong>Reference</strong><span>Copy vibe from another video</span></button>
-              <button type="button" data-jump-page="assistant"><strong>Story</strong><span>Script, plan, captions, export package</span></button>
-            </div>
-          </section>
-
-          <section class="panel tools-os-panel" data-page-section data-page="tools">
-            <div class="section-title stacked">
-              <span>Modular AI Tools</span>
-              <h3>Pick a tool, run a workflow</h3>
-              <p>Vixa is organized like a creator workstation: video, image, audio, assistant, and optimization tools are separated but connected.</p>
-            </div>
-            <div class="tool-os-grid">
-              <button type="button" data-jump-page="editor"><strong>AI Edit</strong><span>Prompt based video editing</span></button>
-              <button type="button" data-jump-page="reference"><strong>Reference Match</strong><span>Match tone, cuts, zooms, captions</span></button>
-              <button type="button" data-jump-page="photo"><strong>Photo to Video</strong><span>Animate stills into motion clips</span></button>
-              <button type="button" data-jump-page="style"><strong>Style Transform</strong><span>Normal photo to stylized AI output</span></button>
-              <button type="button" data-jump-page="voice"><strong>Voice Studio</strong><span>Text to speech in multiple languages</span></button>
-              <button type="button" data-jump-page="subtitles"><strong>Auto Subtitle</strong><span>Generate captions automatically</span></button>
-              <button type="button" data-jump-page="assistant" data-copilot-preset="translate"><strong>Lip Sync</strong><span>Dub and sync narration plans</span></button>
-              <button type="button" data-jump-page="assistant" data-copilot-preset="beat"><strong>Music Sync</strong><span>Cut and transition with the beat</span></button>
-              <button type="button" data-jump-page="assistant" data-copilot-preset="viral"><strong>Viral Reel AI</strong><span>Hook, retention, CTA score</span></button>
-              <button type="button" data-jump-page="assistant" data-copilot-preset="thumbnail"><strong>Thumbnail AI</strong><span>Frame, title, click optimization</span></button>
-              <button type="button" data-jump-page="assistant" data-copilot-preset="chain"><strong>Prompt Chain AI</strong><span>One prompt to full content pipeline</span></button>
-            </div>
-          </section>
-
-          <section class="panel engines-panel" data-page-section data-page="engines">
-            <div class="section-title stacked">
-              <span>Developer Only</span>
-              <h3>Engine Control</h3>
-              <p>This technical page is hidden from normal users. It helps you check backend AI modules while users only see simple creation tools.</p>
-            </div>
-            <div class="engine-summary">
-              <div><span>Ready Engines</span><strong id="engineReadyCount">--</strong></div>
-              <div><span>Runtime</span><strong id="engineRuntime">Checking</strong></div>
-              <div><span>Cost Mode</span><strong>Free / Local</strong></div>
-            </div>
-            <div id="engineGrid" class="engine-grid">
-              <article class="engine-card"><strong>Checking engines...</strong><span>Scanning local AI stack</span></article>
-            </div>
-          </section>
-
-          <section class="panel assets-os-panel" data-page-section data-page="assets projects">
-            <div class="section-title stacked">
-              <span>Asset Library</span>
-              <h3>Your Vixa workspace</h3>
-              <p>Images, videos, voice files, exports, and prompt-chain outputs live in one creator library.</p>
-            </div>
-            <div class="asset-grid">
-              <article><strong>Video Imports</strong><span>12 files</span><small>Raw clips and reference videos</small></article>
-              <article><strong>AI Images</strong><span>8 outputs</span><small>Style transforms and thumbnail bases</small></article>
-              <article><strong>Voiceovers</strong><span>5 tracks</span><small>Generated narration files</small></article>
-              <article><strong>Exports</strong><span>18 renders</span><small>Final reels, drafts, and packages</small></article>
-            </div>
-            <div class="asset-storage-panel">
-              <div>
-                <span>Workspace Storage</span>
-                <strong>24.6 GB / 100 GB</strong>
-              </div>
-              <div class="storage-bar"><span></span></div>
-              <div class="asset-storage-breakdown">
-                <p><span>Uploads</span><strong>14.2 GB</strong></p>
-                <p><span>AI Outputs</span><strong>6.8 GB</strong></p>
-                <p><span>Voice + Captions</span><strong>1.1 GB</strong></p>
-                <p><span>Projects</span><strong>2.5 GB</strong></p>
-              </div>
-            </div>
-          </section>
-
-          <section id="creatorCopilot" class="copilot-panel panel" data-page-section data-page="assistant copilot">
-            <div class="section-title stacked">
-              <span>Vixa Ultimate AI</span>
-              <h3>Vixa Assistant</h3>
-              <p>One place for viral scoring, highlights, beat sync, tracking, script writing, translation, thumbnails, analytics, and full prompt-chain plans.</p>
-            </div>
-
-            <div class="copilot-grid">
-              <div class="copilot-controls">
-                <label for="copilotPrompt">Tell Vixa what you want</label>
-                <textarea id="copilotPrompt" rows="6">Meri video boring lag rahi hai. Isko viral reel banao with strong hook, captions, beat sync, Hindi voiceover, thumbnail, and analytics.</textarea>
-
-                <label for="copilotMediaContext">Media context</label>
-                <input id="copilotMediaContext" type="text" placeholder="Example: 3 min podcast, travel vlog, product video, normal photo..." />
-
-                <label>AI mode</label>
-                <div class="copilot-mode-grid">
-                  <button class="copilot-mode-chip active" type="button" data-mode="copilot">AI Copilot</button>
-                  <button class="copilot-mode-chip" type="button" data-mode="viral">Viral Reel AI</button>
-                  <button class="copilot-mode-chip" type="button" data-mode="highlights">Auto Highlight</button>
-                  <button class="copilot-mode-chip" type="button" data-mode="beat">Music Beat</button>
-                  <button class="copilot-mode-chip" type="button" data-mode="tracking">Face Tracking</button>
-                  <button class="copilot-mode-chip" type="button" data-mode="background">Background AI</button>
-                  <button class="copilot-mode-chip" type="button" data-mode="script">Script Writer</button>
-                  <button class="copilot-mode-chip" type="button" data-mode="translate">Translate + Dub</button>
-                  <button class="copilot-mode-chip" type="button" data-mode="thumbnail">Thumbnail AI</button>
-                  <button class="copilot-mode-chip" type="button" data-mode="analytics">AI Analytics</button>
-                  <button class="copilot-mode-chip wide" type="button" data-mode="chain">Prompt Chain AI</button>
-                </div>
-
-                <button id="copilotGenerateBtn" class="primary generate-button generate" type="button">
-                  <span class="copilot-button-label">Generate Creator Plan</span>
-                  <span class="button-loader" aria-hidden="true"></span>
-                </button>
-              </div>
-
-              <div class="copilot-output-card">
-                <div class="section-title">
-                  <h3 id="copilotResultTitle">AI plan output</h3>
-                  <p id="copilotStatus">Ready for prompt</p>
-                </div>
-                <div class="viral-score">
-                  <span>Viral Score</span>
-                  <strong id="copilotScore">--</strong>
-                </div>
-                <div id="copilotRecommendations" class="copilot-recommendations">
-                  <p>AI recommendations will appear here.</p>
-                </div>
-                <pre id="copilotJson" class="ai-test-output">Action JSON will appear here.</pre>
-              </div>
-            </div>
-          </section>
-
-          <section id="referenceMatch" class="reference-editor panel" data-page-section data-page="reference">
-            <div class="section-title stacked">
-              <span>Copy Style from Reference</span>
-              <h3>Reference Match AI</h3>
-              <p>Upload a reference. Get the same vibe. AI analyzes tone, pacing, cuts, captions, aspect ratio, beat pattern, and zoom style.</p>
-            </div>
-
-            <div class="reference-grid">
-              <label class="ref-card" for="mainVideo">
-                <span class="ref-icon">01</span>
-                <h4>Your Video</h4>
-                <p>Jo video edit karni hai</p>
-                <input type="file" accept="video/*" id="mainVideo" />
-                <small id="mainVideoName">No video selected</small>
-              </label>
-
-              <label class="ref-card" for="referenceVideo">
-                <span class="ref-icon">02</span>
-                <h4>Reference Video</h4>
-                <p>Jaisi style chahiye</p>
-                <input type="file" accept="video/*" id="referenceVideo" />
-                <small id="referenceVideoName">No reference selected</small>
-              </label>
-            </div>
-
-            <div class="reference-workflow">
-              <div>
-                <label for="referencePrompt">Extra instruction</label>
-                <textarea id="referencePrompt" rows="4" placeholder="Extra instruction: Make it like the reference but more cinematic..."></textarea>
-                <button id="referenceGenerateBtn" class="primary generate-button generate reference-generate" type="button">
-                  <span class="reference-button-label">Match Reference Style ✨</span>
-                  <span class="button-loader" aria-hidden="true"></span>
-                </button>
-              </div>
-
-              <div class="reference-results">
-                <div class="reference-result-header">
-                  <strong>AI style analysis</strong>
-                  <span id="referenceStatus">Waiting for both videos</span>
-                </div>
-                <div class="analysis-grid">
-                  <div><span>Color tone</span><strong id="analysisTone">--</strong></div>
-                  <div><span>Speed</span><strong id="analysisSpeed">--</strong></div>
-                  <div><span>Cuts</span><strong id="analysisCuts">--</strong></div>
-                  <div><span>Transitions</span><strong id="analysisTransitions">--</strong></div>
-                  <div><span>Captions style</span><strong id="analysisCaptions">--</strong></div>
-                  <div><span>Aspect ratio</span><strong id="analysisRatio">--</strong></div>
-                  <div><span>Music / beat</span><strong id="analysisBeat">--</strong></div>
-                  <div><span>Zoom style</span><strong id="analysisZoom">--</strong></div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section id="videoEditor" class="editor panel" data-page-section data-page="editor">
-            <div class="section-title stacked">
-              <span>Create with AI</span>
-              <h3>Video Editor</h3>
-            </div>
-
-            <div class="cards">
-              <label class="card upload-card" for="videoInput">
-                <h4>1. Upload Video</h4>
-                <input id="videoInput" type="file" accept="video/*" />
-                <small>MP4, MOV, WebM, or any browser-playable file</small>
-              </label>
-
-              <div class="card">
-                <h4>2. Describe Your Edit</h4>
-                <textarea id="prompt" rows="5">Make this into a cinematic short reel with clean color and smooth pacing.</textarea>
-              </div>
-
-              <div class="card">
-                <h4>3. Choose Style</h4>
-                <div class="styles">
-                  <button class="style-chip active" type="button" data-style="cinematic">Cinematic</button>
-                  <button class="style-chip" type="button" data-style="dramatic">Dramatic</button>
-                  <button class="style-chip" type="button" data-style="reel">Reel</button>
-                  <button class="style-chip" type="button" data-style="anime">Anime</button>
-                  <button class="style-chip" type="button" data-style="viral shorts">Viral Shorts</button>
-                </div>
-              </div>
-            </div>
-
-            <section class="ai-brain-panel developer-panel">
-              <div>
-                <span class="ai-live-dot"></span>
-                <div>
-                  <h4>Free AI Brain Active</h4>
-                  <p>Local prompt AI, Whisper subtitles, Scene AI, Silence AI, and FFmpeg renderer are connected.</p>
-                </div>
-              </div>
-              <button id="analyzePromptBtn" class="secondary" type="button">Analyze Prompt with AI</button>
-              <pre id="promptAiOutput" class="prompt-ai-output">Prompt AI actions will appear here.</pre>
-            </section>
-
-            <button id="generateBtn" class="primary generate-button generate" type="button">
-              <span class="button-label">Generate with Free AI</span>
-              <span class="button-loader" aria-hidden="true"></span>
-            </button>
-          </section>
-
-          <section class="preview-workspace" data-page-section data-page="editor">
-            <article class="panel preview-panel">
-              <div class="section-title">
-                <div>
-                  <h3 id="projectName">Vixa Studio project</h3>
-                  <p id="status">Ready for your first edit</p>
-                </div>
-                <div class="segments" role="group" aria-label="Export format">
-                  <button class="segment active" data-format="9:16" type="button">9:16</button>
-                  <button class="segment" data-format="1:1" type="button">1:1</button>
-                  <button class="segment" data-format="16:9" type="button">16:9</button>
-                </div>
-              </div>
-              <div class="stage-wrap">
-                <div id="stage" class="stage vertical">
-                  <video id="video" controls playsinline></video>
-                  <div id="captionOverlay" class="caption-overlay"></div>
-                  <div id="focusFrame" class="focus-frame"></div>
-                </div>
-              </div>
-              <a id="downloadLink" class="download-link" href="#" download hidden>Download Output</a>
-            </article>
-
-            <article class="panel tools-panel">
-              <h3>Optional tools</h3>
-              <div class="tool-grid">
-                <button class="tool-card" type="button" data-tool="captions">Auto Subtitle</button>
-                <button class="tool-card" type="button" data-tool="silence">Remove Silence</button>
-                <button class="tool-card" type="button" data-tool="zoom">AI Highlights</button>
-                <button class="tool-card" type="button" data-tool="music">AI Voiceover</button>
-              </div>
-              <h3>Smart controls</h3>
-              <label class="toggle"><input id="captionsToggle" type="checkbox" /> Add captions</label>
-              <label class="toggle"><input id="zoomToggle" type="checkbox" /> Auto zoom</label>
-              <label class="toggle"><input id="silenceToggle" type="checkbox" /> Remove silence</label>
-              <label class="toggle"><input id="musicToggle" type="checkbox" /> Background music</label>
-              <h3>Output</h3>
-              <div class="metric"><span>Duration</span><strong id="durationMetric">--</strong></div>
-              <div class="metric"><span>Cuts</span><strong id="cutsMetric">0</strong></div>
-              <div class="metric"><span>Style</span><strong id="styleMetric">Short reel</strong></div>
-            </article>
-          </section>
-
-          <section class="timeline-panel panel developer-panel" data-page-section data-page="editor">
-            <div class="section-title">
-              <div>
-                <h3>AI edit plan</h3>
-                <p id="planSummary">No cuts yet</p>
-              </div>
-              <div>
-                <button id="applyBtn" class="secondary" type="button">Apply plan</button>
-                <button id="exportBtn" class="secondary" type="button">Export plan</button>
-              </div>
-            </div>
-            <div id="timeline" class="timeline"></div>
-          </section>
-
-          <section class="panel ai-intelligence-panel developer-panel" data-page-section data-page="editor">
-            <div class="section-title">
-              <div>
-                <h3>AI Intelligence</h3>
-                <p id="aiSummary">Upload and generate to see AI analysis</p>
-              </div>
-            </div>
-            <div class="ai-intelligence-grid">
-              <div><span>Prompt AI</span><strong id="aiPromptSource">--</strong></div>
-              <div><span>Scene AI</span><strong id="aiSceneCount">--</strong></div>
-              <div><span>Subtitle AI</span><strong id="aiCaptionCount">--</strong></div>
-              <div><span>Silence AI</span><strong id="aiSilenceCount">--</strong></div>
-            </div>
-          </section>
-
-          <section id="photoToVideo" class="photo-video-panel panel" data-page-section data-page="photo">
-            <div class="section-title stacked">
-              <span>Photo to Video AI</span>
-              <h3>Animate still images into cinematic AI videos</h3>
-              <p>Current free mode renders real MP4 motion locally with FFmpeg. Future cloud mode can send heavy AnimateDiff / Stable Video Diffusion jobs to Google Cloud GPU.</p>
-            </div>
-
-            <div class="photo-video-grid">
-              <div class="photo-controls">
-                <label class="upload-zone photo-upload" for="photoInput">
-                  <input id="photoInput" type="file" accept="image/*" multiple />
-                  <span class="upload-icon">+</span>
-                  <strong>Upload one or multiple images</strong>
-                  <small>JPG, PNG, WebP, or any browser-playable image</small>
-                </label>
-
-                <label for="photoPrompt">Motion prompt</label>
-                <textarea id="photoPrompt" rows="4">Make this photo cinematic with slow zoom and rain effect</textarea>
-
-                <label>Motion style</label>
-                <div class="choice-grid">
-                  <button class="motion-chip active" type="button" data-motion="slow-zoom">Slow Zoom</button>
-                  <button class="motion-chip" type="button" data-motion="pan-left">Pan Left</button>
-                  <button class="motion-chip" type="button" data-motion="pan-right">Pan Right</button>
-                  <button class="motion-chip" type="button" data-motion="parallax">3D Parallax</button>
-                  <button class="motion-chip" type="button" data-motion="cinematic">Cinematic Motion</button>
-                  <button class="motion-chip" type="button" data-motion="anime">Anime Motion</button>
-                  <button class="motion-chip" type="button" data-motion="product">Product Showcase</button>
-                </div>
-
-                <div class="selector-row">
-                  <div>
-                    <label>Duration</label>
-                    <div class="mini-segments">
-                      <button class="duration-chip active" type="button" data-duration="5">5 sec</button>
-                      <button class="duration-chip" type="button" data-duration="10">10 sec</button>
-                      <button class="duration-chip" type="button" data-duration="15">15 sec</button>
-                      <button class="duration-chip" type="button" data-duration="30">30 sec</button>
-                    </div>
-                  </div>
-                  <div>
-                    <label>Aspect ratio</label>
-                    <div class="mini-segments">
-                      <button class="photo-ratio-chip active" type="button" data-ratio="16:9">16:9</button>
-                      <button class="photo-ratio-chip" type="button" data-ratio="9:16">9:16</button>
-                      <button class="photo-ratio-chip" type="button" data-ratio="1:1">1:1</button>
-                    </div>
-                  </div>
-                </div>
-
-                <button id="photoGenerateBtn" class="primary generate-button generate" type="button">
-                  <span class="photo-button-label">Generate Video from Photos</span>
-                  <span class="button-loader" aria-hidden="true"></span>
-                </button>
-                <div class="photo-pipeline">
-                  <strong>Render pipeline</strong>
-                  <p><span>1</span> Upload photo</p>
-                  <p><span>2</span> Choose motion + prompt</p>
-                  <p><span>3</span> Local FFmpeg motion render</p>
-                  <p><span>4</span> Optional Google Cloud GPU for heavy generative AI</p>
-                </div>
-              </div>
-
-              <div class="photo-preview-card">
-                <div class="section-title">
-                  <h3>Generated video preview</h3>
-                  <p id="photoPreviewMeta">Upload photos and generate motion</p>
-                </div>
-                <div id="photoStage" class="photo-stage ratio-wide motion-slow-zoom">
-                  <div id="photoPlaceholder" class="photo-placeholder">
-                    <strong>Photo to Video AI</strong>
-                    <span>Cinematic motion preview will appear here</span>
-                  </div>
-                  <div id="photoPreviewStack" class="photo-preview-stack" hidden>
-                    <img id="photoPreviewImage" alt="Generated photo video preview" />
-                    <div class="motion-sheen"></div>
-                    <div class="rain-effect"></div>
-                    <div id="photoPreviewCaption" class="photo-preview-caption">Cinematic slow zoom</div>
-                    <div class="photo-progress"><span id="photoProgressBar"></span></div>
-                  </div>
-                  <video id="photoRenderedVideo" class="photo-rendered-video" controls playsinline loop hidden></video>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section class="panel captions-panel" data-page-section data-page="subtitles">
-            <h3>Captions</h3>
-            <div id="captionsList" class="captions-list"></div>
-          </section>
-
-          <section id="styleTransform" class="style-transform-panel panel" data-page-section data-page="style">
-            <div class="section-title stacked">
-              <span>Photo Magic AI</span>
-              <h3>AI Style Transform</h3>
-              <p>Upload a normal photo, choose a look, and generate a stylized AI edit as a real image output.</p>
-            </div>
-
-            <div class="style-transform-grid">
-              <div class="style-transform-controls">
-                <label class="upload-zone style-upload" for="styleImageInput">
-                  <input id="styleImageInput" type="file" accept="image/*" />
-                  <span class="upload-icon">+</span>
-                  <strong>Upload normal photo</strong>
-                  <small id="styleImageName">JPG, PNG, or WebP</small>
-                </label>
-
-                <label class="upload-zone reference-upload" for="styleReferenceInput">
-                  <input id="styleReferenceInput" type="file" accept="image/*" />
-                  <span class="upload-icon">R</span>
-                  <strong>Optional reference image</strong>
-                  <small id="styleReferenceName">Use this for reference style copy</small>
-                </label>
-
-                <label>Choose AI style</label>
-                <div class="choice-grid style-choice-grid">
-                  <button class="image-style-chip active" type="button" data-style="voxel">Voxel World</button>
-                  <button class="image-style-chip" type="button" data-style="anime">Anime</button>
-                  <button class="image-style-chip" type="button" data-style="animated-3d">3D Animation</button>
-                  <button class="image-style-chip" type="button" data-style="cinematic">Cinematic</button>
-                  <button class="image-style-chip" type="button" data-style="cyberpunk">Cyberpunk</button>
-                  <button class="image-style-chip" type="button" data-style="cartoon">Cartoon</button>
-                  <button class="image-style-chip" type="button" data-style="storybook">Storybook Anime</button>
-                  <button class="image-style-chip" type="button" data-style="reference">Copy Reference</button>
-                </div>
-
-                <label for="stylePrompt">Style prompt</label>
-                <textarea id="stylePrompt" rows="4">Make this photo cinematic with neon glow, dramatic lighting, and premium detail.</textarea>
-
-                <button id="styleGenerateBtn" class="primary generate-button generate" type="button">
-                  <span class="style-button-label">Generate AI Image Edit</span>
-                  <span class="button-loader" aria-hidden="true"></span>
-                </button>
-              </div>
-
-              <div class="style-preview-card">
-                <div class="section-title">
-                  <h3>AI image output</h3>
-                  <p id="styleStatus">Upload a photo to begin</p>
-                </div>
-                <div class="style-output-stage">
-                  <div id="stylePlaceholder" class="photo-placeholder">
-                    <strong>AI stylized photo</strong>
-                    <span>Generated image preview will appear here</span>
-                  </div>
-                  <img id="styleOutputImage" alt="AI stylized output" hidden />
-                </div>
-                <a id="styleDownloadLink" class="download-link" href="#" download hidden>Download AI Image</a>
-              </div>
-            </div>
-          </section>
-
-          <section class="panel page-panel" data-page-section data-page="templates">
-            <div class="section-title stacked">
-              <span>Template Library</span>
-              <h3>AI editing templates</h3>
-              <p>Pick a preset and jump into the editor with a ready prompt.</p>
-            </div>
-            <div class="template-strip expanded-strip">
-              <button class="template-tile tile-cinematic" type="button" data-template="Make this a cinematic product teaser with premium captions."><span></span><strong>Cinematic Product</strong><small>16:9</small></button>
-              <button class="template-tile tile-dramatic" type="button" data-template="Make this dramatic with moody color and slow push-in."><span></span><strong>Dramatic Story</strong><small>16:9</small></button>
-              <button class="template-tile tile-reel" type="button" data-template="Create a viral short with fast pacing, bold captions, and a strong hook."><span></span><strong>Viral Short</strong><small>9:16</small></button>
-              <button class="template-tile tile-anime" type="button" data-template="Turn this into an anime-inspired highlight reel with dramatic color and movement."><span></span><strong>Anime Highlight</strong><small>16:9</small></button>
-            </div>
-          </section>
-
-          <section class="panel page-panel" data-page-section data-page="projects">
-            <div class="section-title stacked">
-              <span>Projects</span>
-              <h3>Your recent video renders</h3>
-              <p>Rendered outputs and active edits will appear here.</p>
-            </div>
-            <div class="project-strip expanded-strip">
-              <article class="project-tile tile-dramatic"><span>00:45</span><strong>Cinematic Reel</strong><small>1080p render</small></article>
-              <article class="project-tile tile-anime"><span>00:30</span><strong>Anime Edit</strong><small>Draft</small></article>
-              <article class="project-tile tile-cinematic"><span>01:20</span><strong>Travel Vlog</strong><small>4K render</small></article>
-              <article class="project-tile tile-reel"><span>00:28</span><strong>Motivation Short</strong><small>Ready</small></article>
-            </div>
-          </section>
-
-          <section class="panel page-panel voice-studio-panel" data-page-section data-page="voice">
-            <div class="section-title stacked">
-              <span>Voice Studio</span>
-              <h3>Multi-language AI voiceover</h3>
-              <p>Write narration, choose voice/language/emotion, and generate a real audio file locally.</p>
-            </div>
-            <div class="voice-grid">
-              <div class="voice-controls">
-                <label for="voiceText">Voice script</label>
-                <textarea id="voiceText" rows="7">Create beyond editing. Welcome to Vixa Studio, your AI video creation suite.</textarea>
-
-                <div class="voice-selectors">
-                  <label>Language
-                    <select id="voiceLanguage">
-                      <option value="english">English</option>
-                      <option value="hindi">Hindi</option>
-                      <option value="marathi">Marathi</option>
-                      <option value="japanese">Japanese</option>
-                      <option value="korean">Korean</option>
-                      <option value="spanish">Spanish</option>
-                      <option value="french">French</option>
-                      <option value="arabic">Arabic</option>
-                      <option value="tamil">Tamil</option>
-                    </select>
-                  </label>
-                  <label>Voice
-                    <select id="voiceType">
-                      <option value="hindi_male">Hindi Male - Madhur</option>
-                      <option value="hindi_female">Hindi Female - Swara</option>
-                      <option value="english_india_male">English India Male - Prabhat</option>
-                      <option value="english_india_female">English India Female - Neerja</option>
-                      <option value="english_us_male">English US Male - Guy</option>
-                      <option value="english_us_female">English US Female - Jenny</option>
-                      <option value="marathi_male">Marathi Male - Manohar</option>
-                      <option value="marathi_female">Marathi Female - Aarohi</option>
-                    </select>
-                  </label>
-                  <label>Emotion
-                    <select id="voiceEmotion">
-                      <option value="neutral">Neutral</option>
-                      <option value="excited">Excited</option>
-                      <option value="sad cinematic">Sad Cinematic</option>
-                      <option value="aggressive trailer">Aggressive Trailer</option>
-                      <option value="calm premium">Calm Premium</option>
-                    </select>
-                  </label>
-                </div>
-
-                <button id="voiceGenerateBtn" class="primary generate-button generate" type="button">
-                  <span class="voice-button-label">Generate Voiceover</span>
-                  <span class="button-loader" aria-hidden="true"></span>
-                </button>
-              </div>
-
-              <div class="voice-preview-card">
-                <div class="section-title">
-                  <h3>Audio preview</h3>
-                  <p id="voiceStatus">Ready for script</p>
-                </div>
-                <div class="waveform"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
-                <audio id="voiceAudio" controls hidden></audio>
-                <a id="voiceDownloadLink" class="download-link" href="#" download hidden>Download Voiceover</a>
-              </div>
-            </div>
-          </section>
-
-          <section class="panel page-panel" data-page-section data-page="settings">
-            <div class="section-title stacked">
-              <span>Real AI Setup</span>
-              <h3>Connect OpenAI Brain</h3>
-              <p>Backend reads your API key from environment variables. Use this page to verify and test the AI brain.</p>
-            </div>
-            <div class="ai-setup-grid">
-              <div>
-                <h4>AI Provider Status</h4>
-                <div class="ai-status-list">
-                  <p><span>Provider</span><strong id="settingsAiProvider">Checking...</strong></p>
-                  <p><span>Model</span><strong id="settingsAiModel">--</strong></p>
-                  <p><span>OpenAI</span><strong id="settingsOpenAi">--</strong></p>
-                  <p><span>Whisper</span><strong id="settingsWhisper">--</strong></p>
-                  <p><span>Scene AI</span><strong id="settingsSceneAi">--</strong></p>
-                </div>
-              </div>
-              <div>
-                <h4>Test Prompt AI</h4>
-                <textarea id="aiTestPrompt" rows="5">Make this a cinematic reel with bold captions, remove silence, and find highlights.</textarea>
-                <button id="aiTestBtn" class="primary generate" type="button">Test AI Brain</button>
-                <pre id="aiTestOutput" class="ai-test-output">AI actions will appear here.</pre>
-              </div>
-            </div>
-          </section>
-
-          <section class="panel page-panel" data-page-section data-page="music analytics">
-            <div class="section-title stacked">
-              <span>Studio Tools</span>
-              <h3>Coming next</h3>
-              <p>This page is separated now and ready for dedicated AI tools.</p>
-            </div>
-          </section>
-        </section>
-
-        <aside class="quick-column" data-page-aside="dashboard">
-          <section class="panel quick-actions">
-            <h3>Quick Actions</h3>
-            <button type="button" data-tool="captions"><strong>Auto Subtitle</strong><span>Generate subtitles for video</span></button>
-            <button type="button" data-tool="silence"><strong>Remove Silence</strong><span>Cut silent parts automatically</span></button>
-            <button type="button" data-tool="zoom"><strong>AI Highlights</strong><span>Find best moments</span></button>
-            <button type="button"><strong>Convert to Reel</strong><span>9:16 vertical video</span></button>
-            <button type="button" data-tool="music"><strong>AI Voiceover</strong><span>Text to speech narration</span></button>
-            <button type="button" data-jump-page="copilot"><strong>AI Copilot</strong><span>Score and plan your content</span></button>
-          </section>
-        </aside>
+        <label class="quality-option" data-value="hd">
+          <input type="radio" name="quality" value="hd" />
+          <strong>HD</strong>
+          ~1 credit
+        </label>
+        <label class="quality-option" data-value="ultra">
+          <input type="radio" name="quality" value="ultra" />
+          <strong>Ultra</strong>
+          ~3 credits
+        </label>
       </div>
-    </main>
 
-    <script src="script.js"></script>
-  </body>
+      <p class="note" id="estimateInfo">Estimated cost: ~0.2 credit</p>
+      <button id="generateBtn" onclick="generateImage()">Generate Image</button>
+      <p class="status" id="status">Free users get up to 5 images per day.</p>
+
+      <div class="result-preview" id="previewWrapper" style="display:none;">
+        <img id="result" alt="Generated image preview" />
+      </div>
+
+      <p class="note small">The prompt is polished automatically. If you want exact wording, paste the prompt after generation.</p>
+    </div>
+
+    <section class="history">
+      <h2>Recent images</h2>
+      <div class="history-list" id="historyList">
+        <p class="note">No images generated yet.</p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const qualityOptions = document.querySelectorAll('.quality-option');
+    const statusEl = document.getElementById('status');
+    const estimateEl = document.getElementById('estimateInfo');
+    const previewWrapper = document.getElementById('previewWrapper');
+    const resultImage = document.getElementById('result');
+
+    const costMap = {
+      fast: '~0.2 credit',
+      hd: '~1 credit',
+      ultra: '~3 credits'
+    };
+
+    function updateEstimate() {
+      const selected = document.querySelector('input[name="quality"]:checked').value;
+      estimateEl.textContent = `Estimated cost: ${costMap[selected]}`;
+    }
+
+    qualityOptions.forEach(option => {
+      option.addEventListener('click', () => {
+        qualityOptions.forEach(item => item.classList.remove('selected'));
+        option.classList.add('selected');
+        option.querySelector('input').checked = true;
+        updateEstimate();
+      });
+    });
+
+    async function generateImage() {
+      const prompt = document.getElementById('prompt').value.trim();
+      const quality = document.querySelector('input[name="quality"]:checked').value;
+      if (!prompt) {
+        statusEl.textContent = 'Please enter an image prompt.';
+        return;
+      }
+
+      statusEl.textContent = 'Generating...';
+      document.getElementById('generateBtn').disabled = true;
+      previewWrapper.style.display = 'none';
+
+      const formData = new FormData();
+      formData.append('prompt', prompt);
+      formData.append('quality', quality);
+
+      try {
+        const res = await fetch('/generate-image', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          statusEl.textContent = data.error || 'Unable to generate image. Please try again.';
+          return;
+        }
+
+        resultImage.src = data.image_url;
+        previewWrapper.style.display = 'block';
+        statusEl.textContent = 'Image ready. Scroll down for history.';
+        loadHistory();
+      } catch (error) {
+        statusEl.textContent = 'Network error. Please try again.';
+      } finally {
+        document.getElementById('generateBtn').disabled = false;
+      }
+    }
+
+    function formatTime(iso) {
+      try {
+        return new Date(iso).toLocaleString([], { hour12: true, month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+      } catch (err) {
+        return iso;
+      }
+    }
+
+    function reusePrompt(text) {
+      const promptInput = document.getElementById('prompt');
+      promptInput.value = text;
+      promptInput.focus();
+      statusEl.textContent = 'Prompt loaded. Edit or generate again.';
+    }
+
+    async function loadHistory() {
+      const list = document.getElementById('historyList');
+      try {
+        const res = await fetch('/image-history');
+        const data = await res.json();
+        if (!res.ok || !data.success || !Array.isArray(data.history)) {
+          list.innerHTML = '<p class="note">Unable to load history.</p>';
+          return;
+        }
+
+        if (data.history.length === 0) {
+          list.innerHTML = '<p class="note">No images generated yet.</p>';
+          return;
+        }
+
+        list.innerHTML = '';
+        data.history.slice(0, 8).forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'history-card';
+          card.innerHTML = `
+            <img src="/outputs/${item.filename}" alt="History image" />
+            <div class="history-meta">
+              <p><strong>Prompt:</strong> ${item.prompt}</p>
+              <p><strong>Quality:</strong> ${item.quality.toUpperCase()}</p>
+              <time>${formatTime(item.timestamp)}</time>
+            </div>
+            <div class="history-actions">
+              <button type="button" onclick="reusePrompt(${JSON.stringify(item.prompt)})">Reuse</button>
+            </div>
+          `;
+          list.appendChild(card);
+        });
+      } catch (error) {
+        list.innerHTML = '<p class="note">Unable to load history.</p>';
+      }
+    }
+
+    loadHistory();
+    updateEstimate();
+  </script>
+</body>
 </html>

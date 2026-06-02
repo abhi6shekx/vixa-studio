@@ -799,6 +799,82 @@ textarea {
   gap: 12px;
 }
 
+/* Image create panel */
+.image-create-grid {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 14px;
+}
+.image-controls {
+  display: grid;
+  gap: 10px;
+}
+.image-controls textarea,
+.image-controls select,
+.image-controls input[type="file"] {
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.18);
+  border: 1px solid var(--line);
+}
+.image-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+}
+.image-cost-info {
+  margin-top: -4px;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.quota-meter {
+  margin: 10px 0 12px;
+}
+.quota-meter-track {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.quota-meter-fill {
+  width: 0;
+  height: 100%;
+  background: linear-gradient(90deg, var(--violet), var(--blue));
+  transition: width 0.24s ease;
+}
+.quota-meter-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.image-preview .preview-stage {
+  min-height: 260px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 8px;
+  display: grid;
+  place-items: center;
+  background: rgba(0,0,0,0.16);
+}
+.recent-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.recent-item img {
+  width: 86px;
+  height: 86px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}
+
 .overview-grid div {
   padding: 14px;
   border: 1px solid var(--line);

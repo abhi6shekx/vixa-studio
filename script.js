@@ -98,6 +98,156 @@ const engineReadyCount = document.querySelector("#engineReadyCount");
 const engineRuntime = document.querySelector("#engineRuntime");
 const engineGrid = document.querySelector("#engineGrid");
 
+// Image-create UI elements
+const imagePrompt = document.querySelector("#imagePrompt");
+const imageReference = document.querySelector("#imageReference");
+const imageStyle = document.querySelector("#imageStyle");
+const imageQuality = document.querySelector("#imageQuality");
+const imageWatermarkToggle = document.querySelector("#imageWatermarkToggle");
+const imageEnhanceBtn = document.querySelector("#imageEnhanceBtn");
+const imageGenerateBtn = document.querySelector("#imageGenerateBtn");
+const imageDemoBtn = document.querySelector("#imageDemoBtn");
+const imageCostInfo = document.querySelector("#imageCostInfo");
+const imageQuotaBar = document.querySelector("#imageQuotaBar");
+const imageQuotaUsed = document.querySelector("#imageQuotaUsed");
+const imageQuotaRemaining = document.querySelector("#imageQuotaRemaining");
+const imagePreview = document.querySelector("#imagePreview");
+const imageInspiration = document.querySelector("#imageInspiration");
+const imageQuota = document.querySelector("#imageQuota");
+const imageRecentList = document.querySelector("#imageRecentList");
+
+const imageQualityCosts = {
+  fast: { label: "Fast", estimate: "≈ $0.006", detail: "Lowest cost, 512px output" },
+  medium: { label: "Medium", estimate: "≈ $0.015", detail: "Balanced cost, 1024px output" },
+  hd: { label: "HD", estimate: "≈ $0.045", detail: "Higher detail, 1024px quality" },
+  ultra: { label: "Ultra", estimate: "≈ $0.12", detail: "Maximum detail, 2048px output" },
+};
+
+function updateImageCostInfo() {
+  if (!imageCostInfo || !imageQuality) return;
+  const quality = imageQuality.value || "fast";
+  const cost = imageQualityCosts[quality] || imageQualityCosts.fast;
+  imageCostInfo.textContent = `Estimate: ${cost.estimate} · ${cost.detail}`;
+}
+
+async function loadImageQuota() {
+  try {
+    const res = await fetch(`/api/image/quota?user_id=local_user`);
+    const data = await res.json();
+    if (data?.success && data.quota) {
+      const q = data.quota;
+      if (q.is_pro) {
+        imageQuota.textContent = `Pro user — unlimited images`;
+        if (imageQuotaUsed) imageQuotaUsed.textContent = `Unlimited used`;
+        if (imageQuotaRemaining) imageQuotaRemaining.textContent = `Unlimited remaining`;
+        if (imageQuotaBar) imageQuotaBar.style.width = `100%`;
+      } else {
+        imageQuota.textContent = `Free quota: ${q.used_today} / ${q.limit} today`;
+        if (imageQuotaUsed) imageQuotaUsed.textContent = `${q.used_today} used`;
+        if (imageQuotaRemaining) imageQuotaRemaining.textContent = `${q.remaining} remaining`;
+        if (imageQuotaBar) imageQuotaBar.style.width = `${Math.min(100, (q.used_today / q.limit) * 100)}%`;
+      }
+    } else {
+      imageQuota.textContent = `Quota unknown`;
+    }
+  } catch (e) {
+    imageQuota.textContent = `Quota unavailable`;
+  }
+}
+
+async function loadRecentAssets() {
+  try {
+    const res = await fetch(`/api/image/recent?user_id=local_user&limit=12`);
+    const data = await res.json();
+    if (data?.success) {
+      imageRecentList.innerHTML = data.items
+        .map((name) => `<a class="recent-item" href="/assets/${name}" target="_blank"><img src="/assets/${name}" alt="${name}"/></a>`)
+        .join("");
+    }
+  } catch (e) {
+    imageRecentList.innerHTML = "";
+  }
+}
+
+async function enhanceImagePrompt() {
+  if (!imagePrompt || !imagePrompt.value.trim()) return;
+  imageEnhanceBtn.disabled = true;
+  imageEnhanceBtn.textContent = "Enhancing...";
+  try {
+    const res = await fetch(`/api/image/enhance`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: imagePrompt.value }),
+    });
+    const data = await res.json();
+    if (data?.success && data.prompt) {
+      imagePrompt.value = data.prompt;
+      imageInspiration.textContent = data.prompt;
+    } else {
+      imageInspiration.textContent = data.error || "Enhance failed";
+    }
+  } catch (e) {
+    imageInspiration.textContent = "Enhance error";
+  } finally {
+    imageEnhanceBtn.disabled = false;
+    imageEnhanceBtn.textContent = "Enhance Prompt ✨";
+  }
+}
+
+async function createImage() {
+  if (!imagePrompt || !imagePrompt.value.trim()) return;
+  imageGenerateBtn.disabled = true;
+  imageDemoBtn?.setAttribute("disabled", "disabled");
+  imageGenerateBtn.textContent = "Creating...";
+  try {
+    const form = new FormData();
+    const promptText = imagePrompt.value.trim();
+    const styleHint = imageStyle?.value ? `${imageStyle.value} ` : "";
+    form.append("prompt", `${styleHint}${promptText}`);
+    form.append("quality", imageQuality.value || "fast");
+    form.append("user_id", "local_user");
+    form.append("watermark", imageWatermarkToggle.checked ? "true" : "false");
+    if (imageReference && imageReference.files && imageReference.files[0]) {
+      form.append("reference", imageReference.files[0]);
+    }
+    const res = await fetch(`/api/image/create`, { method: "POST", body: form });
+    const data = await res.json();
+    if (data?.success && data.url) {
+      imagePreview.src = data.url;
+      imagePreview.hidden = false;
+      imageInspiration.textContent = `Generated: ${data.filename}`;
+      await loadRecentAssets();
+      await loadImageQuota();
+    } else {
+      imageInspiration.textContent = data.error || "Create failed";
+    }
+  } catch (e) {
+    imageInspiration.textContent = "Create error";
+  } finally {
+    imageGenerateBtn.disabled = false;
+    imageDemoBtn?.removeAttribute("disabled");
+    imageGenerateBtn.textContent = "Create Image 🔥";
+  }
+}
+
+async function demoCreateImage() {
+  if (!imagePrompt) return;
+  imagePrompt.value = "Cinematic ultra detailed cat portrait, dramatic lighting, soft shadows, premium color.";
+  if (imageQuality) imageQuality.value = "fast";
+  updateImageCostInfo();
+  imageInspiration.textContent = "Running quick demo with the OpenAI image endpoint...";
+  await createImage();
+}
+
+if (imageEnhanceBtn) imageEnhanceBtn.addEventListener("click", enhanceImagePrompt);
+if (imageGenerateBtn) imageGenerateBtn.addEventListener("click", createImage);
+if (imageDemoBtn) imageDemoBtn.addEventListener("click", demoCreateImage);
+if (imageQuality) imageQuality.addEventListener("change", updateImageCostInfo);
+updateImageCostInfo();
+// load initial state
+loadImageQuota();
+loadRecentAssets();
+
 const pageRoutes = {
   "/": "dashboard",
   "/create": "create",

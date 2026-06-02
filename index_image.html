@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Vixa Studio AI Image</title>
+  <style>
+    body {
+      background: #070814;
+      color: white;
+      font-family: Arial;
+      padding: 40px;
+    }
+
+    .box {
+      max-width: 700px;
+      margin: auto;
+      background: #11182c;
+      padding: 30px;
+      border-radius: 25px;
+    }
+
+    textarea, button {
+      width: 100%;
+      padding: 15px;
+      margin-top: 15px;
+      border-radius: 14px;
+      border: none;
+    }
+
+    textarea {
+      height: 130px;
+      background: #202b4b;
+      color: white;
+    }
+
+    button {
+      background: linear-gradient(90deg, #7b2ff7, #b14cff);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    img {
+      width: 100%;
+      margin-top: 25px;
+      border-radius: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="box">
+  <h1>Vixa Studio Image AI</h1>
+
+  <textarea id="prompt" placeholder="A futuristic cyber warrior in neon city"></textarea>
+
+  <button onclick="generateImage()">Generate Image</button>
+
+  <p id="status"></p>
+  <img id="result">
+</div>
+
+<script>
+async function generateImage() {
+  const prompt = document.getElementById("prompt").value;
+  const status = document.getElementById("status");
+  const img = document.getElementById("result");
+
+  status.innerText = "Generating...";
+  img.src = "";
+
+  const formData = new FormData();
+  formData.append("prompt", prompt);
+
+  const res = await fetch("/generate-image", {
+    method: "POST",
+    body: formData
+  });
+
+  const data = await res.json();
+
+  if (data.error) {
+    status.innerText = data.error;
+    return;
+  }
+
+  status.innerText = "Done";
+  img.src = data.image_url;
+}
+</script>
+
+</body>
+</html>
