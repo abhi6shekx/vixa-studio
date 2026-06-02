@@ -63,6 +63,8 @@ const settingsSceneAi = document.querySelector("#settingsSceneAi");
 const aiTestPrompt = document.querySelector("#aiTestPrompt");
 const aiTestBtn = document.querySelector("#aiTestBtn");
 const aiTestOutput = document.querySelector("#aiTestOutput");
+const analyzePromptBtn = document.querySelector("#analyzePromptBtn");
+const promptAiOutput = document.querySelector("#promptAiOutput");
 
 const pageRoutes = {
   "/": "dashboard",
@@ -212,7 +214,7 @@ function setGenerateLoading(isLoading) {
   generateBtn.disabled = isLoading || !selectedFile;
   topGenerateBtn.disabled = isLoading;
   generateBtn.classList.toggle("is-loading", isLoading);
-  if (buttonLabel) buttonLabel.textContent = isLoading ? "Generating" : "Generate Video";
+  if (buttonLabel) buttonLabel.textContent = isLoading ? "Generating" : "Generate with Free AI";
   topGenerateBtn.textContent = isLoading ? "Generating..." : "Start New Project";
 }
 
@@ -278,6 +280,28 @@ async function testAiBrain() {
     aiTestOutput.textContent = error.message || "AI prompt test failed";
   } finally {
     aiTestBtn.disabled = false;
+  }
+}
+
+async function analyzePromptInEditor() {
+  if (!promptAiOutput) return;
+  analyzePromptBtn.disabled = true;
+  promptAiOutput.textContent = "Free AI is reading your prompt...";
+  try {
+    const response = await fetch("/api/ai/prompt", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: `${promptInput.value} ${selectedStyle}` }),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.message || "Prompt AI failed");
+    promptAiOutput.textContent = JSON.stringify(result.actions, null, 2);
+    aiPromptSource.textContent = result.provider || result.actions?.source || "local-ai-parser";
+    statusText.textContent = "Prompt AI analyzed your edit instructions";
+  } catch (error) {
+    promptAiOutput.textContent = error.message || "Prompt AI failed";
+  } finally {
+    analyzePromptBtn.disabled = false;
   }
 }
 
@@ -766,6 +790,7 @@ referenceVideoInput.addEventListener("change", () => {
 
 referenceGenerateBtn.addEventListener("click", generateReferenceEdit);
 aiTestBtn?.addEventListener("click", testAiBrain);
+analyzePromptBtn?.addEventListener("click", analyzePromptInEditor);
 
 window.addEventListener("popstate", () => {
   showPage(pageRoutes[location.pathname] || "dashboard", { push: false, instant: true });
